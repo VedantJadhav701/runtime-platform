@@ -1,54 +1,57 @@
-# Antigravity: Local AI Execution Operating System (v5.5)
+# Antigravity: Autonomous Local Execution Platform (v5.5)
 
 [![Autonomous Infrastructure](https://img.shields.io/badge/Architecture-v5.5-blueviolet)](docs/architecture/runtime_architecture_spec.md)
 [![Status](https://img.shields.io/badge/Status-Production--Hardened-success)]()
 [![Governance](https://img.shields.io/badge/Governance-Watchdog--Enabled-amber)]()
+[![Replay](https://img.shields.io/badge/Debug-Time--Travel--Replay-blue)]()
 
-Antigravity is a production-grade, local-first AI execution runtime designed for developers who require deterministic orchestration, autonomous self-healing, and absolute operational trust.
+Antigravity is a production-grade, local-first AI execution runtime. It is engineered for developers and infrastructure teams who require **deterministic orchestration**, **autonomous self-healing**, and **absolute operational trust**.
 
-Unlike generic "AI coding tools," Antigravity is an **Execution Operating System**. It does not just suggest code; it governs its entire lifecycle—from intent extraction to autonomous delivery.
+Unlike generic AI coding assistants, Antigravity is an **Execution Operating System**. It doesn't just generate code—it governs its entire lifecycle, validates its integrity, repairs its failures, and audits its execution with millisecond precision.
 
 ---
 
 ## 🏛️ Core Architectural Pillars
 
-### 1. Execution Governance (Watchdogs)
-The kernel maintains absolute authority over all sandboxed processes. Using tiered escalation (SIGTERM → SIGKILL), the **ProcessWatchdog** ensures that no generated code can hang or deadlock the host system.
+### 1. Execution Governance (Watchdog Sentinel)
+The Antigravity Kernel maintains absolute authority over all sandboxed processes. Every execution cycle is monitored by the **ProcessWatchdog**, which enforces strict timeout policies and manages tiered escalation (SIGTERM → SIGKILL) to prevent hanging code from compromising the host system.
 
-### 2. Environment Attestation (Integrity)
-Every virtual environment is cryptographically signed. The **AttestationEngine** performs SHA-256 integrity checks before every execution to detect environment decay or manual tampering.
+### 2. Time-Travel Debugging (Execution Replay)
+Our flagship differentiator. Every orchestration task is captured in a permanent "Flight Log." Using the **ReplayEngine**, users can reconstruct and play back the entire execution timeline—inspecting every node state, terminal output, and autonomous repair decision as if they were traveling through time.
 
-### 3. Resilient Orchestration (Crash Recovery)
-The system is built for high availability. Through atomic **State Checkpointing**, Antigravity can survive system crashes and resume complex orchestration tasks from the exact micro-step where they were interrupted.
+### 3. Environment Attestation (Integrity Guard)
+Every sandbox is cryptographically signed upon creation. The **AttestationEngine** performs SHA-256 integrity checks before and after every execution, ensuring that the runtime environment remains pristine and has not been corrupted by side effects or manual tampering.
 
-### 4. Runtime Hygiene (Quarantine)
-Antigravity manages its own resource lifecycle. Instead of immediate deletion, failed or stale environments are moved to a **Quarantine Zone**, preserving evidence for post-mortem analysis and "Flight Log" auditing.
+### 4. Deterministic Self-Healing (Failure Taxonomy)
+Antigravity doesn't "guess" how to fix errors. It classifies failures into a formal **Failure Taxonomy** (Dependency, Syntax, Lint, Runtime). The **RepairRegistry** then routes these signals to specialized repairers—like our **AST-Aware Patcher**—to apply deterministic, syntax-aware fixes.
 
-### 5. Collaborative Delivery (GitProvider)
-The final proof of success is delivery. Once a generation achieves a **Confidence Score > 80%**, the system autonomously initializes a repository, commits the changes, and pushes to a remote remote.
+### 5. Operational Confidence Engine
+Every task is quantified. The **ConfidenceEngine** calculates a real-time trust score (0-100) based on validation depth, repair frequency, and process stability. Only high-confidence builds reach the **DELIVERY** phase.
 
 ---
 
-## 🔄 The 6-Step Autonomous Loop
+## 🔄 The 7-Step Autonomous Loop
 
-The Antigravity Kernel orchestrates every task through a deterministic graph lifecycle:
+Antigravity orchestrates work through a bulletproof infrastructure lifecycle:
 
-1.  **SCAFFOLD**: Template-driven project initialization.
-2.  **BOOTSTRAP**: Isolated `venv` creation with **Integrity Attestation**.
-3.  **PROVISION**: Atomic dependency injection and feature composition.
-4.  **JUDGE**: Multi-vector validation (Exit Codes, Artifacts, AST, Ruff).
-5.  **SELF-HEAL**: Autonomous repair loops for dependency and style violations.
-6.  **DELIVERY**: Git commit and push of the validated state.
+1.  **SCAFFOLD**: Template-driven project architecture initialization.
+2.  **BOOTSTRAP**: Sandbox creation with **Cryptographic Attestation**.
+3.  **PROVISION**: Atomic dependency injection and AST-aware feature patching.
+4.  **PRE-FLIGHT**: Layered static analysis (Ruff, Syntax) *before* runtime execution.
+5.  **JUDGE**: Multi-vector validation of outputs, artifacts, and exit codes.
+6.  **SELF-HEAL**: Taxonomy-driven autonomous repair cycles.
+7.  **DELIVERY**: Automated Git synchronization for high-confidence artifacts.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Kernel**: Python 3.10+ (FastAPI, Pydantic V2, Asyncio)
-- **Intelligence**: Local LLMs (via Ollama: Qwen2.5-Coder, Mistral)
-- **Governance**: Ruff (Static Analysis), Psutil (Process Management)
-- **Desktop**: Tauri, React, Tailwind CSS, Lucide Icons
-- **Telemetry**: WebSocket-driven real-time graph visualization
+- **Kernel Core**: Python 3.10+ (FastAPI, Pydantic V2, Asyncio)
+- **Local Intelligence**: Ollama (Qwen2.5-Coder, Mistral, Llama 3)
+- **Static Analysis**: Ruff, LibCST (AST-Aware Patching)
+- **System Governance**: Psutil (Process Management & Watchdogs)
+- **Desktop HUD**: Tauri, React, Tailwind CSS, Lucide Icons
+- **Telemetry**: Real-time WebSocket-driven Execution HUD
 
 ---
 
@@ -69,16 +72,26 @@ pip install -r requirements.txt
 bun install
 ```
 
-### 3. Launch the Runtime
+### 3. Launch the Platform
 ```bash
 # Start the Backend Kernel
-python -m runtime.api.server
+$env:PYTHONPATH = "."; python runtime/api/server.py
 
-# Start the Desktop Dashboard
+# Start the Desktop HUD
+cd apps/desktop
 bun run dev
 ```
 
 ---
 
+## ✨ The Golden Workflow
+Experience the full power of the platform with our obsessively polished demo script:
+```bash
+python scripts/golden_workflow.py
+```
+*Watch as the system extracts intent, bootstraps a sandbox, triggers an intentional fault, repairs itself using static analysis, and generates a flight log—all in under 20 seconds.*
+
+---
+
 ## 📜 License
-Antigravity is licensed under the [MIT License](LICENSE). Built for the era of Autonomous Infrastructure.
+Antigravity is licensed under the [MIT License](LICENSE). Built for the era of Autonomous Infrastructure by **Senior Runtime Implementation Engineers**. 🚀
