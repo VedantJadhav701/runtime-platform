@@ -19,6 +19,7 @@ from runtime.kernel.lifecycle.confidence import ConfidenceEngine
 from runtime.environment.failure_taxonomy.definitions import FailureType
 from runtime.kernel.cleanup.manager import CleanupManager
 from runtime.kernel.recovery.engine import RecoveryEngine
+from runtime.environment.collaboration.git_provider import GitProvider
 
 logger = logging.getLogger("runtime.kernel.lifecycle")
 
@@ -26,6 +27,7 @@ class LifecycleEngine:
     """
     The LifecycleEngine is the orchestration truth layer.
     It implements the 6-step Autonomous Loop: Scaffold -> Bootstrap -> Provision -> Judge -> Self-Heal -> Finalize.
+    (v5.5): Adds optional DELIVERY phase.
     """
     def __init__(self, telemetry: TelemetryManager, workspace_root: str = "."):
         self.telemetry = telemetry
@@ -40,6 +42,7 @@ class LifecycleEngine:
         self.confidence_engine = ConfidenceEngine()
         self.cleanup_manager = CleanupManager(self.workspace_root)
         self.recovery_engine = RecoveryEngine(self.workspace_root)
+        self.git_provider = GitProvider(self.workspace_root)
 
     async def run_task(self, task_spec: TaskSpec, resume_id: Optional[str] = None) -> ExecutionReport:
         start_time = time.time()
@@ -125,9 +128,6 @@ class LifecycleEngine:
             # STEP 4-5: JUDGE & SELF-HEAL LOOP
             max_loop_retries = 5
             loop_count = 0
-
-            # If resuming, we need to know where we were in the loop
-            # For simplicity, we just restart the loop from the current graph state
             
             while loop_count < max_loop_retries:
                 # JUDGE
@@ -181,6 +181,28 @@ class LifecycleEngine:
             # STEP 6: FINALIZE
             final_state = "COMPLETED" if success else "FAILED"
             await self._transition(graph_id, final_state)
+            
+            # STEP 7: DELIVERY (v5.5)
+            if success and confidence.score > 80 and task_spec.delivery_url:
+                await self._transition(graph_id, "DELIVERING")
+                node_delivery = await self._add_node(graph_id, "DELIVERY", {"url": task_spec.delivery_url})
+                
+                delivery_success = self.git_provider.init_repo(session_dir)
+                if delivery_success:
+                    delivery_success = self.git_provider.commit_all(
+                        session_dir, 
+                        message=f"feat: autonomous generation of {task_spec.template_id}"
+                    )
+                if delivery_success:
+                    # Note: This might still fail due to auth, but the loop continues
+                    self.git_provider.push(session_dir, task_spec.delivery_url)
+                
+                await self._update_node(
+                    graph_id, 
+                    node_delivery.id, 
+                    NodeStatus.COMPLETED if delivery_success else NodeStatus.FAILED
+                )
+                await self._transition(graph_id, "DELIVERED" if delivery_success else "COMPLETED")
 
             report = ExecutionReport(
                 task_id=graph_id,

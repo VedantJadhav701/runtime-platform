@@ -35,3 +35,4 @@ class TaskSpec(BaseModel):
     environment: Dict[str, Any] = Field(default_factory=dict)
     constraints: List[str] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
+    delivery_url: Optional[str] = None

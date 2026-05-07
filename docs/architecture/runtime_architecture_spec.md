@@ -1,23 +1,21 @@
-# Runtime Architecture Specification v5.4 (Resilient Orchestration Edition)
+# Runtime Architecture Specification v5.5 (Collaborative Infrastructure Edition)
 
-## 1. State Checkpointing
-The kernel must persist its internal state after every significant progress milestone to enable recovery.
+## 1. The GitProvider Interface
+The system must manage Git repositories within the sandboxed environment to enable delivery.
 
-### Checkpoint Trigger:
-A `checkpoint.json` is updated in the session directory whenever:
-- A `Lifecycle Transition` occurs.
-- An `ExecutionNode` moves to the `COMPLETED` state.
+### Atomic Operations:
+- `Init`: Creating a local repository for every new scaffold.
+- `Commit`: Capturing the validated state with structured, machine-generated commit messages.
+- `Push`: Delivering the state to a remote URL (GitHub/GitLab).
 
-## 2. Session Resumption Logic
-On boot, the kernel performs a **Recovery Scan**:
-1. **Identify**: Find folders in `.runtime/sessions/` containing a `checkpoint.json` but no `report.json`.
-2. **Re-Attest**: Run `EnvironmentAttestation` on the resumed sandbox.
-3. **Restore**: Deserialize the `ExecutionGraph` and set the kernel state to the last checkpointed phase.
-4. **Continue**: Resume the autonomous loop from the first `IDLE` or `REPAIRABLE` node.
+## 2. The Delivery Gate
+Code delivery is a **Privileged Operation**. The system only pushes if:
+1. **Confidence Score > 80%**: Ensuring the code is validated and clean.
+2. **Attestation Passed**: Ensuring the environment is uncorrupted.
+3. **Watchdog Active**: Ensuring the Git process does not hang on authentication.
 
-## 3. Resilience Constraints
-- **One-Time Resume**: A session can only be resumed once. If it crashes again during the resumed run, it is moved to quarantine.
-- **Integrity Lock**: If attestation fails on resume, the session is abandoned.
+## 3. Collaboration Telemetry
+Push events are broadcasted with the remote URL and commit hash, allowing the UI to provide a direct link to the delivered code.
 
-## 4. Recovery Telemetry
-Resumed tasks are flagged with a `RECOVERY_TRUE` metadata tag, allowing the UI to highlight the "Resurrected" portion of the timeline.
+## 4. Auth Governance
+The GitProvider leverages the host system's existing Git credentials (SSH/GCM), ensuring it never handles raw tokens or passwords directly.
