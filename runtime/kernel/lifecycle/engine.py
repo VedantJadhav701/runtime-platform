@@ -4,7 +4,7 @@ import os
 import time
 import json
 import shutil
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Tuple
 
 from runtime.kernel.execution_graph.schemas import ExecutionGraph, ExecutionNode, NodeStatus, TaskSpec
 from runtime.api.websocket.handler import TelemetryManager
@@ -13,7 +13,7 @@ from runtime.api.schemas.tasks import ExecutionReport
 # Integration Imports
 from runtime.generation.scaffolder import ProjectScaffolder
 from runtime.environment.sandbox.venv_provider import VenvProvider
-from runtime.environment.validation.engine import ValidationEngine
+from runtime.environment.validation.engine import ValidationEngine, ValidationResult
 from runtime.kernel.lifecycle.repair_registry import RepairRegistry
 from runtime.kernel.lifecycle.confidence import ConfidenceEngine
 from runtime.environment.failure_taxonomy.definitions import FailureType
@@ -68,6 +68,7 @@ class LifecycleEngine:
         success = False
         repair_count = 0
         validation_history = []
+        sandbox = None
 
         try:
             # STEP 1: SCAFFOLD
@@ -85,15 +86,15 @@ class LifecycleEngine:
                 node_bootstrap = await self._add_node(graph_id, "BOOTSTRAP")
                 
                 async def perform_bootstrap():
-                    sandbox = VenvProvider(graph_id, self.workspace_root)
-                    if not await sandbox.bootstrap():
+                    sb = VenvProvider(graph_id, self.workspace_root)
+                    if not await sb.bootstrap():
                         raise RuntimeError("Failed to bootstrap virtual environment")
                     
                     # INTEGRITY CHECK (v5.3)
-                    if not await sandbox.validate_integrity():
+                    if not await sb.validate_integrity():
                         logger.error(f"Integrity check failed for {graph_id}")
-                        return False, sandbox
-                    return True, sandbox
+                        return False, sb
+                    return True, sb
 
                 boot_success, sandbox = await perform_bootstrap()
                 
@@ -194,7 +195,6 @@ class LifecycleEngine:
                         message=f"feat: autonomous generation of {task_spec.template_id}"
                     )
                 if delivery_success:
-                    # Note: This might still fail due to auth, but the loop continues
                     self.git_provider.push(session_dir, task_spec.delivery_url)
                 
                 await self._update_node(
@@ -236,7 +236,7 @@ class LifecycleEngine:
         """
         return await self.run_task(task_spec, resume_id=session_id)
 
-    async def _run_and_judge(self, graph_id: str, sandbox: VenvProvider, session_dir: str, task_spec: TaskSpec) -> (Any, Dict[str, Any]):
+    async def _run_and_judge(self, graph_id: str, sandbox: VenvProvider, session_dir: str, task_spec: TaskSpec) -> Tuple[ValidationResult, Dict[str, Any]]:
         """
         Executes the entrypoint and validates the results.
         """

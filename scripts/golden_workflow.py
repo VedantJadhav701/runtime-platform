@@ -1,94 +1,66 @@
 import asyncio
-import logging
 import os
-import json
-from runtime.planner.classification.classifier import IntentClassifier
+import shutil
+import logging
 from runtime.kernel.lifecycle.engine import LifecycleEngine
-from runtime.api.websocket.handler import TelemetryManager
-from runtime.generation.patching.ast_patcher import ASTPatcher
+from runtime.planner.schemas import TaskSpec
+from runtime.kernel.telemetry.manager import TelemetryManager
 
-# Configure logging for the presentation
-logging.getLogger("runtime").setLevel(logging.WARNING)
+# Configure Logging for Infrastructure-Grade Clarity
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger("antigravity.golden_workflow")
 
-async def golden_workflow():
-    print("="*60)
-    print("✨ THE GOLDEN WORKFLOW ✨")
-    print("Antigravity Runtime: Autonomous Local Execution Platform")
-    print("="*60)
-
-    # 1. Initialization
+async def run_golden_workflow():
+    """
+    The Flagship Demo: Showcasing the 7-Step Autonomous Loop.
+    Workflow: Intent -> Scaffold -> Bootstrap -> Provision -> Judge -> Self-Heal -> Delivery
+    """
+    logger.info("🚀 INITIALIZING ANTIGRAVITY GOLDEN WORKFLOW (v5.5)")
+    
+    # 1. Setup Mock Infrastructure
+    workspace_root = os.getcwd()
+    mock_remote = os.path.join(workspace_root, ".runtime", "mock_remote")
+    if os.path.exists(mock_remote):
+        shutil.rmtree(mock_remote)
+    os.makedirs(mock_remote)
+    
+    # Initialize Git in Mock Remote
+    os.system(f"cd {mock_remote} && git init --bare")
+    
+    # 2. Define the Flagship Task
+    # We intentionaly omit 'fastapi' to trigger the Self-Heal phase
+    task_spec = TaskSpec(
+        template_id="fastapi-basic",
+        project_type="web-service",
+        features=["uvicorn"], # Missing fastapi!
+        delivery_url=f"file:///{mock_remote.replace('\\', '/')}"
+    )
+    
+    # 3. Initialize the Kernel
     telemetry = TelemetryManager()
-    classifier = IntentClassifier()
-    engine = LifecycleEngine(telemetry)
-    patcher = ASTPatcher()
+    kernel = LifecycleEngine(telemetry, workspace_root)
     
-    # 2. Intent Extraction
-    prompt = "Build a minimal FastAPI app with SQLite"
-    print(f"\n[1/6] 🧠 AI Intent Extraction\n      Prompt: '{prompt}'")
+    logger.info("📡 TELEMETRY ONLINE. STARTING ORCHESTRATION.")
+    
+    # 4. Execute the Loop
     try:
-        spec = await classifier.classify_and_compile(prompt)
-        print(f"      Result: {spec.template_id} + Injectors: {spec.features}")
-    except Exception as e:
-        print(f"❌ Intent Classification Failed: {e}")
-        return
-
-    # To guarantee we see the 'Auto-repair' step, we'll intentionally corrupt the template right before it runs,
-    # but do it safely so the platform can fix it.
-    template_path = "runtime/generation/templates/fastapi_basic/server.py"
-    with open(template_path, "a") as f:
-        f.write("\nimport os # Unused import injected to trigger Autonomous Repair\n")
-
-    print(f"\n[2/6] 🏗️  Auto-Bootstrap & Orchestration")
-    print(f"      Initiating 6-Step Lifecycle Engine...")
-    
-    # 3. Lifecycle Orchestration (Auto-bootstrap -> Auto-repair -> Validate)
-    report = await engine.run_task(spec)
-    
-    # Clean up the injected fault from the template for future runs
-    with open(template_path, "r") as f:
-        lines = f.readlines()
-    with open(template_path, "w") as f:
-        f.writelines([l for l in lines if "import os # Unused import injected to trigger Autonomous Repair" not in l])
+        report = await kernel.run_task(task_spec)
         
-    print(f"\n[3/6] 🔧 Autonomous Repair & Validation")
-    print(f"      Task State: {'✅ COMPLETED' if report.success else '❌ FAILED'}")
-    print(f"      Execution Time: {round(report.execution_time, 2)}s")
-    
-    # 4. Read Artifacts for Confidence and Replay
-    history_path = os.path.join("runtime", "artifacts", "execution_reports", f"{report.task_id}.json")
-    try:
-        with open(history_path, "r") as f:
-            flight_log = json.load(f)
-            confidence = flight_log.get("confidence", {})
-            graph = flight_log.get("graph", {})
+        # 5. Benchmark Results
+        logger.info("\n" + "="*50)
+        logger.info("🏆 GOLDEN WORKFLOW COMPLETED")
+        logger.info(f"   Task ID: {report.task_id}")
+        logger.info(f"   Success: {report.success}")
+        logger.info(f"   Execution Time: {report.execution_time:.2f}s")
+        logger.info(f"   Confidence Score: {getattr(report, 'confidence_score', 'N/A')}")
+        logger.info(f"   Delivery State: {'DELIVERED' if report.success else 'FAILED'}")
+        logger.info("="*50 + "\n")
+        
+        logger.info(f"📜 Flight Log saved to: .runtime/history/{report.task_id}.json")
+        logger.info(f"📦 Delivered Code available at: {mock_remote}")
+        
     except Exception as e:
-        print(f"Failed to read Flight Log: {e}")
-        return
-
-    print(f"\n[4/6] 🛡️  Confidence Report")
-    print(f"      Score: {confidence.get('score', 0)}/100 ({confidence.get('status', 'unknown').upper()})")
-    print(f"      Reasons:")
-    for reason in confidence.get('reasons', []):
-        print(f"        - {reason}")
-
-    print(f"\n[5/6] ⏪ Execution Replay Timeline")
-    nodes = graph.get("nodes", {})
-    sorted_nodes = sorted(nodes.values(), key=lambda x: int(x["id"].split("_")[1]))
-    for node in sorted_nodes:
-        action = node["action"]
-        status = node["status"].upper()
-        if status == "FAILED":
-            print(f"      [{action}] -> ❌ {status} (Triggering Repair Routing)")
-        else:
-            print(f"      [{action}] -> ✅ {status}")
-
-    print(f"\n[6/6] 💾 Execution Artifacts Persisted")
-    print(f"      Flight Log: {history_path}")
-    print(f"      Sandbox: .runtime/sessions/{report.task_id}/")
-
-    print("\n" + "="*60)
-    print("🚀 Golden Workflow Completed Successfully.")
-    print("="*60)
+        logger.error(f"❌ Golden Workflow Interrupted: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(golden_workflow())
+    asyncio.run(run_golden_workflow())

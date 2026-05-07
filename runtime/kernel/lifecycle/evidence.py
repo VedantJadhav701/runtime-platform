@@ -1,32 +1,29 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import List, Dict, Any, Optional
+
+class NodeSnapshot(BaseModel):
+    """
+    A snapshot of an execution node's state for Replayability.
+    """
+    node_id: str
+    status: str
+    timestamp: datetime = Field(default_factory=datetime.now)
+    input_params: Optional[Dict[str, Any]] = None
+    output_result: Optional[Dict[str, Any]] = None
+    terminal_output: Optional[str] = None # Capture the full stdout/stderr stream
 
 class ExecutionEvidence(BaseModel):
     """
-    The 'Flight Log' of an autonomous task.
-    Stored in .runtime/history/{task_id}/report.json
+    The persistent 'Flight Log' for an autonomous task (v5.5).
     """
     task_id: str
-    timestamp: datetime = Field(default_factory=datetime.now)
-    task_spec: Dict[str, Any]
-    
-    # The Full Graph History
-    graph_snapshot: Dict[str, Any]
-    telemetry_stream: List[Dict[str, Any]]
-    
-    # Environment Metadata
-    environment: Dict[str, Any] = {
-        "provider": "VenvProvider",
-        "python_version": "3.10+",
-        "dependencies": []
-    }
-    
-    # The Judge's Verdict
-    validation_summary: Dict[str, Any] = {
-        "static_analysis": "PENDING",
-        "runtime_validation": "PENDING",
-        "repair_count": 0
-    }
-    
-    final_status: str # COMPLETED, FAILED, ROLLBACK
+    graph_id: str
+    start_time: datetime
+    end_time: Optional[datetime] = None
+    final_status: str
+    confidence_score: float = 0.0
+    node_snapshots: List[NodeSnapshot] = []
+    quarantine_path: Optional[str] = None
+    delivery_hash: Optional[str] = None # The Git commit hash if delivered
+    recovery_metadata: Optional[Dict[str, Any]] = None
