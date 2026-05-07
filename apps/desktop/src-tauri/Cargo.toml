@@ -1,10 +1,10 @@
 [package]
 name = "app"
 version = "0.1.0"
-description = "Runtime Platform Desktop Shell"
+description = "Antigravity Runtime Desktop Shell"
 authors = ["Vedant Jadhav"]
 license = "MIT"
-repository = "https://github.com/VedantJadhav701/runtime-platform"
+repository = "https://github.com/VedantJadhav701/antigravity-runtime"
 edition = "2021"
 rust-version = "1.60"
 

@@ -13,7 +13,7 @@ logging.getLogger("runtime").setLevel(logging.WARNING)
 async def golden_workflow():
     print("="*60)
     print("✨ THE GOLDEN WORKFLOW ✨")
-    print("Autonomous Local Execution Platform")
+    print("Antigravity Runtime: Autonomous Local Execution Platform")
     print("="*60)
 
     # 1. Initialization

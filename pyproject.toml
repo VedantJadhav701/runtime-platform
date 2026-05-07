@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "runtime-platform-core"
+name = "antigravity-runtime-core"
 version = "0.1.0"
 description = "Autonomous local engineering runtime core"
 authors = ["Vedant Jadhav <vedant@example.com>"]

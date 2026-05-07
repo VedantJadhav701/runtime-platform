@@ -8,7 +8,7 @@ from runtime.replay.engine import ReplayEngine
 import logging
 
 # Initialize Infrastructure
-app = FastAPI(title="Runtime Platform Core")
+app = FastAPI(title="Antigravity Runtime Core")
 telemetry = TelemetryManager()
 kernel = LifecycleEngine(telemetry)
 replay_engine = ReplayEngine()

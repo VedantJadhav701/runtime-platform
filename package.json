@@ -1,5 +1,5 @@
 {
-  "name": "runtime-platform",
+  "name": "antigravity-runtime",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -9,7 +9,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "agrt": "python -m runtime.api.server"
   },
   "devDependencies": {
     "turbo": "latest"

@@ -35,7 +35,7 @@ function App() {
           <div className="p-2 bg-primary/10 rounded-lg">
             <Cpu className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Runtime Platform</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Antigravity Runtime</h1>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-xl border border-border">
