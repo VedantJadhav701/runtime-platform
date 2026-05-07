@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { Activity, Cpu } from 'lucide-react'
+import { useMemo, useState, useEffect } from 'react'
+import { Activity, Cpu, Play } from 'lucide-react'
 import { LogViewer } from './components/LogViewer'
 import { StatusCard } from './components/StatusCard'
 import { ExecutionTimeline } from './components/ExecutionTimeline'
@@ -7,7 +7,21 @@ import { cn } from './lib/utils'
 import { useTelemetry } from './hooks/useTelemetry'
 
 function App() {
-  const { events, status } = useTelemetry('ws://localhost:8000/ws/telemetry')
+  const [replaySessions, setReplaySessions] = useState<string[]>([])
+  const [selectedSession, setSelectedSession] = useState<string>('live')
+
+  useEffect(() => {
+    fetch('http://localhost:8000/replay/sessions')
+      .then(res => res.json())
+      .then(data => setReplaySessions(data.sessions || []))
+      .catch(err => console.error("Failed to load replay sessions", err))
+  }, [])
+
+  const wsUrl = selectedSession === 'live' 
+    ? 'ws://localhost:8000/ws/telemetry'
+    : `ws://localhost:8000/ws/replay/${selectedSession}`
+
+  const { events, status } = useTelemetry(wsUrl)
 
   const currentPhase = useMemo(() => {
     const lastTransition = [...events].reverse().find(e => e.event_type === 'state_transition')
@@ -24,6 +38,20 @@ function App() {
           <h1 className="text-2xl font-bold tracking-tight">Runtime Platform</h1>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-xl border border-border">
+            <Play className="w-4 h-4 text-muted-foreground" />
+            <select 
+              className="bg-transparent text-sm outline-none text-muted-foreground font-medium"
+              value={selectedSession}
+              onChange={(e) => setSelectedSession(e.target.value)}
+            >
+              <option value="live">Live Telemetry</option>
+              {replaySessions.map(session => (
+                <option key={session} value={session}>Replay: {session.substring(0, 14)}...</option>
+              ))}
+            </select>
+          </div>
+          
           <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-full border border-border">
             <Activity className={cn(
               "w-4 h-4 transition-colors",

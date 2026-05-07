@@ -15,6 +15,9 @@ export function useTelemetry(url: string) {
   const socketRef = useRef<WebSocket | null>(null)
 
   useEffect(() => {
+    // Clear events when changing the connection (e.g. switching to replay)
+    setEvents([])
+    
     const connect = () => {
       const socket = new WebSocket(url)
       socketRef.current = socket
@@ -49,7 +52,10 @@ export function useTelemetry(url: string) {
 
       socket.onclose = () => {
         setStatus('disconnected')
-        setTimeout(connect, 5000)
+        // Only reconnect automatically for live telemetry, not replay
+        if (url.includes('telemetry')) {
+          setTimeout(connect, 5000)
+        }
       }
 
       socket.onerror = () => {
