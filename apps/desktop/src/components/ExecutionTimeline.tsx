@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { CheckCircle2, Circle, Clock, AlertCircle, Wrench, PlayCircle } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { CheckCircle2, Circle, Clock, AlertCircle, Wrench, PlayCircle, ChevronDown, ChevronRight } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { TelemetryEvent } from '../hooks/useTelemetry'
 
@@ -17,6 +17,8 @@ interface ExecutionTimelineProps {
 }
 
 export function ExecutionTimeline({ events }: ExecutionTimelineProps) {
+  const [expandedNodeId, setExpandedNodeId] = useState<string | null>(null)
+
   const nodes = useMemo(() => {
     const graphNodes: Record<string, ExecutionNode> = {}
     
@@ -65,7 +67,9 @@ export function ExecutionTimeline({ events }: ExecutionTimelineProps) {
             Waiting for nodes to be dispatched...
           </div>
         ) : (
-          nodes.map((node) => (
+          nodes.map((node) => {
+            const isExpanded = expandedNodeId === node.id;
+            return (
             <div 
               key={node.id} 
               className={cn(
@@ -77,14 +81,19 @@ export function ExecutionTimeline({ events }: ExecutionTimelineProps) {
                 {getStatusIcon(node.status)}
               </div>
               
-              <div className={cn(
-                "p-4 bg-card rounded-xl border transition-all duration-500",
+              <div 
+                onClick={() => setExpandedNodeId(isExpanded ? null : node.id)}
+                className={cn(
+                "p-4 bg-card rounded-xl border transition-all duration-500 cursor-pointer hover:border-primary/50",
                 node.status === 'running' ? "border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]" : "border-border",
                 node.status === 'running' && currentPhase === 'REPAIRING' ? "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]" : "",
                 node.status === 'running' && "animate-pulse"
               )}>
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-sm tracking-tight">{node.action}</h3>
+                  <div className="flex items-center gap-2">
+                    {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                    <h3 className="font-bold text-sm tracking-tight">{node.action}</h3>
+                  </div>
                   <span className={cn(
                     "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border",
                     node.status === 'completed' && "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
@@ -98,19 +107,37 @@ export function ExecutionTimeline({ events }: ExecutionTimelineProps) {
                 </div>
                 
                 {node.params && Object.keys(node.params).length > 0 && (
-                  <div className="text-[10px] text-muted-foreground font-mono mt-1">
+                  <div className="text-[10px] text-muted-foreground font-mono mt-1 ml-6">
                     {JSON.stringify(node.params)}
                   </div>
                 )}
-                
-                {node.error && (
-                  <div className="mt-2 text-[10px] text-rose-500 bg-rose-500/5 p-2 rounded border border-rose-500/10">
-                    {node.error}
+
+                {isExpanded && (
+                  <div className="mt-4 ml-6 space-y-2 border-t border-border pt-4 animate-in slide-in-from-top-2">
+                    {node.output && (
+                      <div>
+                        <span className="text-xs font-semibold text-emerald-500 mb-1 block">Output / Artifacts:</span>
+                        <pre className="text-[10px] bg-black/50 p-2 rounded border border-border overflow-x-auto text-slate-300">
+                          {typeof node.output === 'object' ? JSON.stringify(node.output, null, 2) : node.output}
+                        </pre>
+                      </div>
+                    )}
+                    {node.error && (
+                      <div>
+                        <span className="text-xs font-semibold text-rose-500 mb-1 block">Error Trace:</span>
+                        <pre className="text-[10px] bg-rose-500/10 p-2 rounded border border-rose-500/20 overflow-x-auto text-rose-400">
+                          {node.error}
+                        </pre>
+                      </div>
+                    )}
+                    {!node.output && !node.error && (
+                      <span className="text-xs text-muted-foreground italic">No telemetry recorded for this node.</span>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-          ))
+          )})
         )}
       </div>
     </div>
