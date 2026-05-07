@@ -1,0 +1,103 @@
+{
+  "report": {
+    "task_id": "graph_1778184750",
+    "success": true,
+    "execution_time": 16.522133111953735,
+    "output": "",
+    "errors": [],
+    "rollback_performed": false,
+    "explainability_token": "exp_graph_1778184750"
+  },
+  "graph": {
+    "id": "graph_1778184750",
+    "nodes": {
+      "node_1": {
+        "id": "node_1",
+        "action": "SCAFFOLD",
+        "params": {
+          "template_id": "fastapi_basic"
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_2": {
+        "id": "node_2",
+        "action": "BOOTSTRAP",
+        "params": {},
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_3": {
+        "id": "node_3",
+        "action": "PROVISION",
+        "params": {
+          "features": [
+            "uvicorn"
+          ]
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_4": {
+        "id": "node_4",
+        "action": "JUDGE",
+        "params": {
+          "attempt": 0
+        },
+        "depends_on": [],
+        "status": "failed",
+        "output": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\r\n  File \"<string>\", line 1, in <module>\r\n    import server\r\n  File \"C:\\Users\\HP\\projects\\runtime-platform\\.runtime\\sessions\\graph_1778184750\\server.py\", line 1, in <module>\r\n    from fastapi import FastAPI\r\nModuleNotFoundError: No module named 'fastapi'\r\n\nProcess failed with exit code 1"
+        },
+        "error": "Validation failed"
+      },
+      "node_5": {
+        "id": "node_5",
+        "action": "REPAIR",
+        "params": {
+          "attempt": 0
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_6": {
+        "id": "node_6",
+        "action": "JUDGE",
+        "params": {
+          "attempt": 1
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": {
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "error": null
+      }
+    },
+    "active_node_id": "node_6",
+    "state": "COMPLETED"
+  },
+  "confidence": {
+    "score": 90,
+    "reasons": [
+      "environment_repaired (1 times)",
+      "validation_passed: FailureType.RUNTIME_FAILURE",
+      "validation_passed: FailureType.SYNTAX_FAILURE",
+      "validation_passed: FailureType.LINT_FAILURE"
+    ],
+    "status": "high"
+  },
+  "timestamp": 1778184767.3484874
+}

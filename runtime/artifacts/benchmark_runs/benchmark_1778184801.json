@@ -1,0 +1,32 @@
+{
+  "runs": [
+    {
+      "scenario": "Pristine Execution",
+      "success": true,
+      "latency_sec": 16.16,
+      "repair_count": 0,
+      "confidence_score": 0
+    },
+    {
+      "scenario": "Single Dependency Failure",
+      "success": true,
+      "latency_sec": 16.52,
+      "repair_count": 0,
+      "confidence_score": 0
+    },
+    {
+      "scenario": "Multi-Dependency Failure",
+      "success": true,
+      "latency_sec": 17.04,
+      "repair_count": 0,
+      "confidence_score": 0
+    },
+    {
+      "scenario": "Static Analysis (Ruff) Failure",
+      "success": true,
+      "latency_sec": 16.96,
+      "repair_count": 0,
+      "confidence_score": 0
+    }
+  ]
+}

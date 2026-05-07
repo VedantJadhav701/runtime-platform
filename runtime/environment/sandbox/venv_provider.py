@@ -8,6 +8,8 @@ import sys
 from typing import Optional, Dict, Any
 from runtime.shared.interfaces.base import SandboxInterface
 
+from runtime.kernel.watchdog.process_watchdog import ProcessWatchdog
+
 logger = logging.getLogger("runtime.environment.venv")
 
 class VenvProvider(SandboxInterface):
@@ -15,10 +17,11 @@ class VenvProvider(SandboxInterface):
     Implementation of SandboxInterface using Python's native venv module.
     Provides isolation at the library level.
     """
-    def __init__(self, session_id: str, workspace_root: str):
+    def __init__(self, session_id: str, workspace_root: str, watchdog: Optional[ProcessWatchdog] = None):
         self.session_id = session_id
         self.workspace_root = workspace_root
         self.venv_dir = os.path.join(workspace_root, ".runtime", "environments", session_id)
+        self.watchdog = watchdog or ProcessWatchdog()
         
         # OS-specific paths
         if sys.platform == "win32":
@@ -41,22 +44,22 @@ class VenvProvider(SandboxInterface):
             venv.create(self.venv_dir, with_pip=True, clear=True)
             
             # PROVISION: Update pip and setuptools
-            await self.execute_command(f"{self.python_executable} -m pip install --upgrade pip setuptools")
+            await self.execute_command(
+                f"{self.python_executable} -m pip install --upgrade pip setuptools",
+                operation_type="dependency_install"
+            )
             
             return True
         except Exception as e:
             logger.error(f"Failed to bootstrap venv: {e}")
             return False
 
-    async def execute_command(self, command: str) -> Dict[str, Any]:
+    async def execute_command(self, command: str, operation_type: str = "command_execution_default") -> Dict[str, Any]:
         """
-        EXECUTE: Run commands via the venv's python or pip.
-        If the command doesn't start with python/pip, we try to run it in the context.
+        EXECUTE: Run commands via the venv's python or pip under watchdog governance.
         """
-        logger.info(f"Executing in venv: {command}")
+        logger.info(f"Executing in venv [{operation_type}]: {command}")
         
-        # Simple implementation using asyncio.create_subprocess_shell
-        # In a real system, we'd want to handle environment variables (PATH) more robustly
         env = os.environ.copy()
         # Add venv bin dir to PATH
         bin_dir = os.path.dirname(self.python_executable)
@@ -71,13 +74,10 @@ class VenvProvider(SandboxInterface):
             cwd=self.workspace_root
         )
         
-        stdout, stderr = await process.communicate()
+        # Use Watchdog for governed execution (v5.1 blueprint)
+        result = await self.watchdog.watch_process(process, operation_type)
         
-        return {
-            "exit_code": process.returncode,
-            "stdout": stdout.decode(),
-            "stderr": stderr.decode()
-        }
+        return result
 
     async def upload_file(self, source: str, destination: str) -> bool:
         try:

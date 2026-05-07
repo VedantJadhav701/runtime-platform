@@ -1,0 +1,1 @@
+{"metadata": {"policy_version": "1.0", "updated_at": "2026-05-08"}, "policies": {"intent_extraction": 15, "scaffolding": 30, "dependency_install": 180, "static_analysis": 20, "startup_validation": 30, "test_execution": 120, "feature_injection": 45, "git_operations": 60}}

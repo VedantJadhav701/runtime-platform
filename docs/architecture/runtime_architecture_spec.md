@@ -1,22 +1,23 @@
-# Runtime Architecture Specification v5.0 (Autonomous Infrastructure Edition)
+# Runtime Architecture Specification v5.1 (Execution Governance Edition)
 
-## 1. Infrastructure Memory (`/artifacts`)
-The platform persists all execution life-cycles as structured "Memory" artifacts. 
-- **Telemetry Snapshots**: Low-level event streams for replayability.
-- **Benchmark Runs**: Comparative data on model performance and repair success.
-- **Repair Logs**: Detailed audit of autonomous self-healing actions.
+## 1. The Kernel Watchdog Architecture
+We assume that execution can hang, deadlock, or enter infinite loops. The **ProcessWatchdog** is the kernel's mechanism for enforcing temporal containment.
 
-## 2. Failure Taxonomy & Repair Routing
-We use a deterministic **Failure Taxonomy** to map errors to **Repair Capabilities**.
-- `DEPENDENCY_FAILURE` -> `DependencyRepair`
-- `STYLE_VIOLATION` -> `RuffRepair`
-- `STARTUP_FAILURE` -> `LogRepair` (Next)
+### Escalation Tiers:
+1. **Tier 1 (Warning)**: Telemetry alert at 80% of timeout limit.
+2. **Tier 2 (Termination)**: Graceful `SIGTERM` sent to the process.
+3. **Tier 3 (Elimination)**: Forced `SIGKILL` if process persists > 5s after Tier 2.
+4. **Tier 4 (Classification)**: The failure is mapped to `TIMEOUT_FAILURE` in the **Failure Taxonomy**.
 
-## 3. Operational Confidence Engine
-The system calculates a **Confidence Score** for every execution:
-- **Liveness (60%)**: Did the process start and heartbeat?
-- **Integrity (20%)**: Did it pass static analysis and ruff?
-- **Artifacts (20%)**: Were all expected files created and valid?
+## 2. Timeout Policy Registry (`/policies`)
+All execution limits are centralized in `timeouts.json`. 
+- **Dependency Install**: 180s
+- **Static Analysis**: 20s
+- **Startup Validation**: 30s
+- **Intent Extraction**: 15s
 
-## 4. Time-Travel Debugging (UI Engine)
-The UI Dashboard supports **Timeline Scrubbing** by replaying the persisted Telemetry Snapshots. This allows developers to "rewind" autonomous orchestration and inspect state-transitions at any micro-step.
+## 3. Liveness Heartbeats
+For long-running executions (e.g., tests or migrations), the sandbox must emit a heartbeat. If the heartbeat is lost for `N` seconds, the Watchdog triggers a **Pre-emptive Escalation**.
+
+## 4. Resource Governance (Future)
+The Watchdog will eventually monitor CPU and Memory usage, triggering Tier 2 termination if thresholds are exceeded.

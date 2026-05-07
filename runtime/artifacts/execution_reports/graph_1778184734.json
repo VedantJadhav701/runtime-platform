@@ -1,0 +1,79 @@
+{
+  "report": {
+    "task_id": "graph_1778184734",
+    "success": true,
+    "execution_time": 16.153465509414673,
+    "output": "",
+    "errors": [],
+    "rollback_performed": false,
+    "explainability_token": "exp_graph_1778184734"
+  },
+  "graph": {
+    "id": "graph_1778184734",
+    "nodes": {
+      "node_1": {
+        "id": "node_1",
+        "action": "SCAFFOLD",
+        "params": {
+          "template_id": "fastapi_basic"
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_2": {
+        "id": "node_2",
+        "action": "BOOTSTRAP",
+        "params": {},
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_3": {
+        "id": "node_3",
+        "action": "PROVISION",
+        "params": {
+          "features": [
+            "fastapi",
+            "uvicorn"
+          ]
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_4": {
+        "id": "node_4",
+        "action": "JUDGE",
+        "params": {
+          "attempt": 0
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": {
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "error": null
+      }
+    },
+    "active_node_id": "node_4",
+    "state": "COMPLETED"
+  },
+  "confidence": {
+    "score": 100,
+    "reasons": [
+      "pristine_execution",
+      "validation_passed: FailureType.RUNTIME_FAILURE",
+      "validation_passed: FailureType.SYNTAX_FAILURE",
+      "validation_passed: FailureType.LINT_FAILURE",
+      "high_confidence_target_reached"
+    ],
+    "status": "high"
+  },
+  "timestamp": 1778184750.82418
+}
