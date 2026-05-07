@@ -78,7 +78,7 @@ class LifecycleEngine:
                 if not self.scaffolder.scaffold(task_spec.template_id, session_dir):
                     await self._update_node(graph_id, node_scaffold.id, NodeStatus.FAILED, error="Scaffolding failed")
                     raise RuntimeError(f"Scaffolding failed for template {task_spec.template_id}")
-                await self._update_node(graph_id, node_scaffold.id, NodeStatus.COMPLETED)
+                await self._update_node(graph_id, node_scaffold.id, NodeStatus.COMPLETED, output={"message": "Project structure created successfully"})
 
             # STEP 2: BOOTSTRAP
             if not resume_id or graph.state in ["SCAFFOLDING", "BOOTSTRAPPING"]:
@@ -108,7 +108,9 @@ class LifecycleEngine:
                         await self._update_node(graph_id, node_bootstrap.id, NodeStatus.FAILED, error="Bootstrap integrity failed after retry")
                         raise RuntimeError("Bootstrap integrity failed after retry")
 
-                await self._update_node(graph_id, node_bootstrap.id, NodeStatus.COMPLETED)
+                with open(sandbox.integrity_file, "r") as f:
+                    hash_val = f.read().strip()
+                await self._update_node(graph_id, node_bootstrap.id, NodeStatus.COMPLETED, output={"attestation_hash": hash_val})
             else:
                 # Re-initialize sandbox for resume
                 sandbox = VenvProvider(graph_id, self.workspace_root)
@@ -124,7 +126,7 @@ class LifecycleEngine:
                     logger.info(f"Installing requested features: {task_spec.features}")
                     for feature in task_spec.features:
                         await sandbox.execute_command(f"python -m pip install {feature}")
-                await self._update_node(graph_id, node_provision.id, NodeStatus.COMPLETED)
+                await self._update_node(graph_id, node_provision.id, NodeStatus.COMPLETED, output={"installed_features": task_spec.features})
 
             # STEP 4-5: JUDGE & SELF-HEAL LOOP
             max_loop_retries = 5
@@ -148,20 +150,25 @@ class LifecycleEngine:
                 node_repair = await self._add_node(graph_id, "REPAIR", {"attempt": loop_count})
                 
                 repaired = False
+                repair_info = {}
+                # Use Failure Taxonomy for deterministic repair routing
                 for detail in validation_res.details:
                     if not detail.success:
                         logger.info(f"Routing repair for failure type: {detail.type}")
                         repairers = self.repair_registry.get_repairers(detail.type)
+                        
                         failure_context = {
                             "stderr": last_execution_result.get("stderr", ""),
                             "message": detail.message,
                             "session_id": graph_id,
                             "session_dir": session_dir
                         }
+                        
                         for repairer in repairers:
                             if await repairer.repair(failure_context, sandbox):
                                 repaired = True
                                 repair_count += 1
+                                repair_info = {"type": detail.type, "repairer": repairer.__class__.__name__}
                                 break
                         if repaired:
                             break
@@ -170,7 +177,7 @@ class LifecycleEngine:
                     await self._update_node(graph_id, node_repair.id, NodeStatus.FAILED, error="No repair strategy matched or all failed")
                     break
                 
-                await self._update_node(graph_id, node_repair.id, NodeStatus.COMPLETED)
+                await self._update_node(graph_id, node_repair.id, NodeStatus.COMPLETED, output=repair_info)
                 loop_count += 1
 
             # Confidence
@@ -195,12 +202,13 @@ class LifecycleEngine:
                         message=f"feat: autonomous generation of {task_spec.template_id}"
                     )
                 if delivery_success:
-                    self.git_provider.push(session_dir, task_spec.delivery_url)
+                    delivery_success = self.git_provider.push(session_dir, task_spec.delivery_url)
                 
                 await self._update_node(
                     graph_id, 
                     node_delivery.id, 
-                    NodeStatus.COMPLETED if delivery_success else NodeStatus.FAILED
+                    NodeStatus.COMPLETED if delivery_success else NodeStatus.FAILED,
+                    output={"status": "Delivered to remote"} if delivery_success else {"status": "Push failed"}
                 )
                 await self._transition(graph_id, "DELIVERED" if delivery_success else "COMPLETED")
 

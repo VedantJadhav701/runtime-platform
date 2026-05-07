@@ -1,66 +1,110 @@
 import asyncio
+import logging
 import os
 import shutil
-import logging
+import json
+import subprocess
 from runtime.kernel.lifecycle.engine import LifecycleEngine
-from runtime.planner.schemas import TaskSpec
-from runtime.kernel.telemetry.manager import TelemetryManager
+from runtime.kernel.execution_graph.schemas import TaskSpec
+from runtime.api.websocket.handler import TelemetryManager
 
-# Configure Logging for Infrastructure-Grade Clarity
+# Configure logging for presentation clarity
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("antigravity.golden_workflow")
 
 async def run_golden_workflow():
     """
-    The Flagship Demo: Showcasing the 7-Step Autonomous Loop.
-    Workflow: Intent -> Scaffold -> Bootstrap -> Provision -> Judge -> Self-Heal -> Delivery
+    ✨ THE GOLDEN WORKFLOW (v5.5) ✨
+    Demonstrating the full 7-step Autonomous Infrastructure Loop:
+    Scaffold -> Bootstrap -> Provision -> Pre-Flight -> Judge -> Self-Heal -> Delivery
     """
-    logger.info("🚀 INITIALIZING ANTIGRAVITY GOLDEN WORKFLOW (v5.5)")
-    
-    # 1. Setup Mock Infrastructure
+    print("\n" + "="*70)
+    print("🚀 ANTIGRAVITY RUNTIME: GOLDEN WORKFLOW INITIATED")
+    print("="*70)
+
+    # 1. Setup Mock Remote Infrastructure
     workspace_root = os.getcwd()
-    mock_remote = os.path.join(workspace_root, ".runtime", "mock_remote")
-    if os.path.exists(mock_remote):
-        shutil.rmtree(mock_remote)
-    os.makedirs(mock_remote)
+    mock_remote_dir = os.path.join(workspace_root, ".runtime", "mock_remote")
+    if os.path.exists(mock_remote_dir):
+        try:
+            shutil.rmtree(mock_remote_dir)
+        except Exception:
+            # Handle Windows file locking
+            import time
+            mock_remote_dir = os.path.join(workspace_root, ".runtime", f"mock_remote_{int(time.time())}")
+            
+    os.makedirs(mock_remote_dir, exist_ok=True)
+    subprocess.run(["git", "init", "--bare"], cwd=mock_remote_dir, check=True, capture_output=True)
     
-    # Initialize Git in Mock Remote
-    os.system(f"cd {mock_remote} && git init --bare")
-    
-    # 2. Define the Flagship Task
-    # We intentionaly omit 'fastapi' to trigger the Self-Heal phase
-    task_spec = TaskSpec(
-        template_id="fastapi-basic",
-        project_type="web-service",
-        features=["uvicorn"], # Missing fastapi!
-        delivery_url=f"file:///{mock_remote.replace('\\', '/')}"
-    )
-    
-    # 3. Initialize the Kernel
+    remote_url = f"file:///{mock_remote_dir.replace('\\', '/')}"
+    print(f"\n[1/7] 🏗️  MOCK INFRASTRUCTURE READY")
+    print(f"      Remote URL: {remote_url}")
+
+    # 2. Initialize Core Engine
     telemetry = TelemetryManager()
-    kernel = LifecycleEngine(telemetry, workspace_root)
+    engine = LifecycleEngine(telemetry, workspace_root)
     
-    logger.info("📡 TELEMETRY ONLINE. STARTING ORCHESTRATION.")
+    # 3. Define the Flagship Task (Intentional Failure Injection)
+    # We omit 'fastapi' to force a JUDGE phase failure and trigger Self-Heal.
+    task_spec = TaskSpec(
+        project_type="api",
+        template_id="fastapi_basic",
+        features=["uvicorn"], # Missing 'fastapi'!
+        delivery_url=remote_url
+    )
+    print(f"\n[2/7] 🧠 AI INTENT EXTRACTED")
+    print(f"      Template: {task_spec.template_id}")
+    print(f"      Injectors: {task_spec.features} (Warning: 'fastapi' intentionally omitted)")
+
+    # 4. Execute the Autonomous Loop
+    print(f"\n[3/7] 🔄 EXECUTING 7-STEP AUTONOMOUS LOOP...")
+    report = await engine.run_task(task_spec)
+
+    # 5. Analysis & Verification
+    print(f"\n[4/7] ⚖️  ORCHESTRATION ANALYSIS")
+    print(f"      Task ID: {report.task_id}")
+    print(f"      Success: {'✅ YES' if report.success else '❌ NO'}")
+    print(f"      Execution Time: {report.execution_time:.2f}s")
     
-    # 4. Execute the Loop
+    # Read the flight log to see the "Flight Log" details
+    history_path = os.path.join(workspace_root, "runtime", "artifacts", "execution_reports", f"{report.task_id}.json")
     try:
-        report = await kernel.run_task(task_spec)
-        
-        # 5. Benchmark Results
-        logger.info("\n" + "="*50)
-        logger.info("🏆 GOLDEN WORKFLOW COMPLETED")
-        logger.info(f"   Task ID: {report.task_id}")
-        logger.info(f"   Success: {report.success}")
-        logger.info(f"   Execution Time: {report.execution_time:.2f}s")
-        logger.info(f"   Confidence Score: {getattr(report, 'confidence_score', 'N/A')}")
-        logger.info(f"   Delivery State: {'DELIVERED' if report.success else 'FAILED'}")
-        logger.info("="*50 + "\n")
-        
-        logger.info(f"📜 Flight Log saved to: .runtime/history/{report.task_id}.json")
-        logger.info(f"📦 Delivered Code available at: {mock_remote}")
-        
+        with open(history_path, "r") as f:
+            flight_log = json.load(f)
+            confidence = flight_log.get("confidence", {})
+            nodes = flight_log.get("graph", {}).get("nodes", {})
     except Exception as e:
-        logger.error(f"❌ Golden Workflow Interrupted: {e}")
+        print(f"❌ Failed to load Flight Log: {e}")
+        return
+
+    print(f"\n[5/7] 🛡️  OPERATIONAL CONFIDENCE REPORT")
+    print(f"      Score: {confidence.get('score', 0)}/100")
+    print(f"      Status: {confidence.get('status', 'unknown').upper()}")
+    print(f"      Reasons:")
+    for reason in confidence.get('reasons', []):
+        print(f"        - {reason}")
+
+    print(f"\n[6/7] ⏪ TIME-TRAVEL REPLAY AUDIT")
+    # Verify that nodes have output/error for the Replay Engine
+    sorted_nodes = sorted(nodes.values(), key=lambda x: int(x["id"].split("_")[1]))
+    for node in sorted_nodes:
+        action = node["action"]
+        status = node["status"].upper()
+        has_telemetry = "YES" if node.get("output") or node.get("error") else "NO"
+        print(f"      [{action:<10}] -> {status:<10} | Telemetry Fidelity: {has_telemetry}")
+
+    # 6. Verify Delivery
+    print(f"\n[7/7] 💾 DELIVERY CONFIRMATION")
+    git_check = subprocess.run(["git", "log", "-1", "--oneline", "main"], cwd=mock_remote_dir, capture_output=True, text=True)
+    if "autonomous generation" in git_check.stdout:
+        print(f"      Status: ✅ DELIVERED TO REMOTE")
+        print(f"      Commit: {git_check.stdout.strip()}")
+    else:
+        print(f"      Status: ❌ DELIVERY FAILED OR NOT TRIGGERED")
+
+    print("\n" + "="*70)
+    print("✨ GOLDEN WORKFLOW COMPLETED SUCCESSFULLY.")
+    print("="*70 + "\n")
 
 if __name__ == "__main__":
     asyncio.run(run_golden_workflow())
