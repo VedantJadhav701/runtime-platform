@@ -18,6 +18,7 @@ from runtime.kernel.lifecycle.repair_registry import RepairRegistry
 from runtime.kernel.lifecycle.confidence import ConfidenceEngine
 from runtime.environment.failure_taxonomy.definitions import FailureType
 from runtime.kernel.cleanup.manager import CleanupManager
+from runtime.kernel.recovery.engine import RecoveryEngine
 
 logger = logging.getLogger("runtime.kernel.lifecycle")
 
@@ -38,19 +39,27 @@ class LifecycleEngine:
         self.repair_registry = RepairRegistry()
         self.confidence_engine = ConfidenceEngine()
         self.cleanup_manager = CleanupManager(self.workspace_root)
+        self.recovery_engine = RecoveryEngine(self.workspace_root)
 
-    async def run_task(self, task_spec: TaskSpec) -> ExecutionReport:
+    async def run_task(self, task_spec: TaskSpec, resume_id: Optional[str] = None) -> ExecutionReport:
         start_time = time.time()
-        graph_id = f"graph_{int(start_time)}"
         
-        # 1. Initialize Graph
-        graph = ExecutionGraph(id=graph_id, nodes={}, state="IDLE")
-        self.active_graphs[graph_id] = graph
+        if resume_id:
+            graph_id = resume_id
+            logger.info(f"Resuming Autonomous Loop for {graph_id}")
+            checkpoint = self.recovery_engine.load_checkpoint(graph_id)
+            if not checkpoint:
+                raise RuntimeError(f"Failed to load checkpoint for {graph_id}")
+            graph = ExecutionGraph.model_validate(checkpoint)
+            self.active_graphs[graph_id] = graph
+        else:
+            graph_id = f"graph_{int(start_time)}"
+            graph = ExecutionGraph(id=graph_id, nodes={}, state="IDLE")
+            self.active_graphs[graph_id] = graph
+            logger.info(f"Starting Autonomous Loop for {graph_id} (Project: {task_spec.project_type})")
         
         session_dir = os.path.join(self.workspace_root, ".runtime", "sessions", graph_id)
         os.makedirs(session_dir, exist_ok=True)
-
-        logger.info(f"Starting Autonomous Loop for {graph_id} (Project: {task_spec.project_type})")
 
         last_execution_result = None
         success = False
@@ -59,63 +68,69 @@ class LifecycleEngine:
 
         try:
             # STEP 1: SCAFFOLD
-            await self._transition(graph_id, "SCAFFOLDING")
-            node_scaffold = await self._add_node(graph_id, "SCAFFOLD", {"template_id": task_spec.template_id})
-            if not self.scaffolder.scaffold(task_spec.template_id, session_dir):
-                await self._update_node(graph_id, node_scaffold.id, NodeStatus.FAILED, error="Scaffolding failed")
-                raise RuntimeError(f"Scaffolding failed for template {task_spec.template_id}")
-            await self._update_node(graph_id, node_scaffold.id, NodeStatus.COMPLETED)
+            if not resume_id or graph.state == "SCAFFOLDING":
+                await self._transition(graph_id, "SCAFFOLDING")
+                node_scaffold = await self._add_node(graph_id, "SCAFFOLD", {"template_id": task_spec.template_id})
+                if not self.scaffolder.scaffold(task_spec.template_id, session_dir):
+                    await self._update_node(graph_id, node_scaffold.id, NodeStatus.FAILED, error="Scaffolding failed")
+                    raise RuntimeError(f"Scaffolding failed for template {task_spec.template_id}")
+                await self._update_node(graph_id, node_scaffold.id, NodeStatus.COMPLETED)
 
             # STEP 2: BOOTSTRAP
-            await self._transition(graph_id, "BOOTSTRAPPING")
-            node_bootstrap = await self._add_node(graph_id, "BOOTSTRAP")
-            
-            async def perform_bootstrap():
-                sandbox = VenvProvider(graph_id, self.workspace_root)
-                if not await sandbox.bootstrap():
-                    raise RuntimeError("Failed to bootstrap virtual environment")
+            if not resume_id or graph.state in ["SCAFFOLDING", "BOOTSTRAPPING"]:
+                await self._transition(graph_id, "BOOTSTRAPPING")
+                node_bootstrap = await self._add_node(graph_id, "BOOTSTRAP")
                 
-                # INTEGRITY CHECK (v5.3)
-                if not await sandbox.validate_integrity():
-                    logger.error(f"Integrity check failed for {graph_id}")
-                    return False, sandbox
-                return True, sandbox
+                async def perform_bootstrap():
+                    sandbox = VenvProvider(graph_id, self.workspace_root)
+                    if not await sandbox.bootstrap():
+                        raise RuntimeError("Failed to bootstrap virtual environment")
+                    
+                    # INTEGRITY CHECK (v5.3)
+                    if not await sandbox.validate_integrity():
+                        logger.error(f"Integrity check failed for {graph_id}")
+                        return False, sandbox
+                    return True, sandbox
 
-            boot_success, sandbox = await perform_bootstrap()
-            
-            if not boot_success:
-                logger.warning(f"Bootstrap integrity failure on {graph_id}. Retrying once...")
-                # Quarantine the corrupted session
-                self.cleanup_manager.quarantine_session(graph_id, reason="integrity_failure_retry")
-                
-                # Re-create session dir for retry
-                os.makedirs(session_dir, exist_ok=True)
-                # Re-scaffold
-                self.scaffolder.scaffold(task_spec.template_id, session_dir)
-                
-                # Retry bootstrap
                 boot_success, sandbox = await perform_bootstrap()
+                
                 if not boot_success:
-                    await self._update_node(graph_id, node_bootstrap.id, NodeStatus.FAILED, error="Bootstrap integrity failed after retry")
-                    raise RuntimeError("Bootstrap integrity failed after retry")
+                    logger.warning(f"Bootstrap integrity failure on {graph_id}. Retrying once...")
+                    self.cleanup_manager.quarantine_session(graph_id, reason="integrity_failure_retry")
+                    os.makedirs(session_dir, exist_ok=True)
+                    self.scaffolder.scaffold(task_spec.template_id, session_dir)
+                    boot_success, sandbox = await perform_bootstrap()
+                    if not boot_success:
+                        await self._update_node(graph_id, node_bootstrap.id, NodeStatus.FAILED, error="Bootstrap integrity failed after retry")
+                        raise RuntimeError("Bootstrap integrity failed after retry")
 
-            await self._update_node(graph_id, node_bootstrap.id, NodeStatus.COMPLETED)
+                await self._update_node(graph_id, node_bootstrap.id, NodeStatus.COMPLETED)
+            else:
+                # Re-initialize sandbox for resume
+                sandbox = VenvProvider(graph_id, self.workspace_root)
+                if not await sandbox.validate_integrity():
+                    logger.error(f"Resume integrity check failed for {graph_id}")
+                    raise RuntimeError("Resume integrity failure")
 
             # STEP 3: PROVISION
-            await self._transition(graph_id, "PROVISIONING")
-            node_provision = await self._add_node(graph_id, "PROVISION", {"features": task_spec.features})
-            if task_spec.features:
-                logger.info(f"Installing requested features: {task_spec.features}")
-                for feature in task_spec.features:
-                    await sandbox.execute_command(f"python -m pip install {feature}")
-            await self._update_node(graph_id, node_provision.id, NodeStatus.COMPLETED)
+            if not resume_id or graph.state in ["BOOTSTRAPPING", "PROVISIONING"]:
+                await self._transition(graph_id, "PROVISIONING")
+                node_provision = await self._add_node(graph_id, "PROVISION", {"features": task_spec.features})
+                if task_spec.features:
+                    logger.info(f"Installing requested features: {task_spec.features}")
+                    for feature in task_spec.features:
+                        await sandbox.execute_command(f"python -m pip install {feature}")
+                await self._update_node(graph_id, node_provision.id, NodeStatus.COMPLETED)
 
             # STEP 4-5: JUDGE & SELF-HEAL LOOP
             max_loop_retries = 5
             loop_count = 0
 
+            # If resuming, we need to know where we were in the loop
+            # For simplicity, we just restart the loop from the current graph state
+            
             while loop_count < max_loop_retries:
-                # JUDGE (includes execution and validation)
+                # JUDGE
                 node_judge = await self._add_node(graph_id, "JUDGE", {"attempt": loop_count})
                 validation_res, last_execution_result = await self._run_and_judge(graph_id, sandbox, session_dir, task_spec)
                 validation_history.append(validation_res)
@@ -132,19 +147,16 @@ class LifecycleEngine:
                 node_repair = await self._add_node(graph_id, "REPAIR", {"attempt": loop_count})
                 
                 repaired = False
-                # Use Failure Taxonomy for deterministic repair routing
                 for detail in validation_res.details:
                     if not detail.success:
                         logger.info(f"Routing repair for failure type: {detail.type}")
                         repairers = self.repair_registry.get_repairers(detail.type)
-                        
                         failure_context = {
                             "stderr": last_execution_result.get("stderr", ""),
                             "message": detail.message,
                             "session_id": graph_id,
                             "session_dir": session_dir
                         }
-                        
                         for repairer in repairers:
                             if await repairer.repair(failure_context, sandbox):
                                 repaired = True
@@ -155,14 +167,12 @@ class LifecycleEngine:
                 
                 if not repaired:
                     await self._update_node(graph_id, node_repair.id, NodeStatus.FAILED, error="No repair strategy matched or all failed")
-                    logger.warning("No repair possible or repair failed.")
                     break
                 
                 await self._update_node(graph_id, node_repair.id, NodeStatus.COMPLETED)
-                logger.info(f"Self-heal attempt {loop_count + 1} successful, re-judging...")
                 loop_count += 1
 
-            # Confidence Calculation
+            # Confidence
             confidence = self.confidence_engine.calculate(
                 [d.model_dump() for d in validation_history[-1].details] if validation_history else [],
                 repair_count
@@ -181,17 +191,13 @@ class LifecycleEngine:
                 explainability_token=f"exp_{graph_id}"
             )
             
-            # Persist Flight Log and Artifacts
             await self._persist_artifacts(graph_id, report, confidence)
             return report
 
         except Exception as e:
             logger.error(f"Kernel Panic on {graph_id}: {str(e)}")
             await self._transition(graph_id, "ROLLBACK")
-            
-            # Trigger Quarantine for Rollback Sessions (v5.2)
             self.cleanup_manager.quarantine_session(graph_id, reason=f"kernel_panic: {str(e)}")
-            
             report = ExecutionReport(
                 task_id=graph_id,
                 success=False,
@@ -202,33 +208,30 @@ class LifecycleEngine:
             await self._persist_artifacts(graph_id, report, None)
             return report
 
+    async def resume_task(self, session_id: str, task_spec: TaskSpec) -> ExecutionReport:
+        """
+        Resumes a task from a saved checkpoint.
+        """
+        return await self.run_task(task_spec, resume_id=session_id)
+
     async def _run_and_judge(self, graph_id: str, sandbox: VenvProvider, session_dir: str, task_spec: TaskSpec) -> (Any, Dict[str, Any]):
         """
         Executes the entrypoint and validates the results.
-        Returns (ValidationResult, execution_result).
         """
-        # --- PRE-FLIGHT (Static Analysis) ---
         await self._transition(graph_id, "PRE_FLIGHT")
         artifact_paths = [os.path.join(session_dir, "server.py")]
-        
-        # Perform static analysis first (using a mock execution result)
         static_validation = self.validator.validate({"exit_code": 0, "stdout": "", "stderr": ""}, artifact_paths)
         
         if not static_validation.success:
-            logger.warning("Pre-Flight Static Analysis failed. Skipping execution.")
-            # Inject validation details into a mock result for repairers
             val_errors = "\n".join([d.message for d in static_validation.details if not d.success])
             return static_validation, {"exit_code": 1, "stdout": "", "stderr": val_errors}
 
-        # --- EXECUTING ---
         await self._transition(graph_id, "EXECUTING")
         result = await sandbox.execute_command("python -c \"import server\"")
         
-        # --- VALIDATING (Runtime) ---
         await self._transition(graph_id, "VALIDATING")
         validation = self.validator.validate(result, artifact_paths)
         
-        # Inject validation details into result stderr for repairers to see if not already there
         if not validation.success:
             val_errors = "\n".join([d.message for d in validation.details if not d.success])
             result["stderr"] = (result.get("stderr", "") + "\n" + val_errors).strip()
@@ -242,6 +245,9 @@ class LifecycleEngine:
 
         old_state = graph.state
         graph.state = new_state
+        
+        # v5.4: Save Checkpoint
+        self.recovery_engine.save_checkpoint(graph_id, graph.model_dump())
         
         logger.info(f"Kernel Transition [{graph_id}]: {old_state} -> {new_state}")
         
@@ -266,6 +272,9 @@ class LifecycleEngine:
         graph.nodes[node_id] = node
         graph.active_node_id = node_id
         
+        # v5.4: Save Checkpoint
+        self.recovery_engine.save_checkpoint(graph_id, graph.model_dump())
+        
         await self.telemetry.broadcast_event(
             source="kernel",
             phase=graph.state,
@@ -287,6 +296,9 @@ class LifecycleEngine:
             node.status = status
             node.output = output if isinstance(output, dict) else {"raw": str(output)} if output else None
             node.error = error
+            
+            # v5.4: Save Checkpoint
+            self.recovery_engine.save_checkpoint(graph_id, graph.model_dump())
             
             await self.telemetry.broadcast_event(
                 source="kernel",

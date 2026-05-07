@@ -1,23 +1,23 @@
-# Runtime Architecture Specification v5.3 (Environment Attestation Edition)
+# Runtime Architecture Specification v5.4 (Resilient Orchestration Edition)
 
-## 1. Sandbox Integrity Hashing
-To prevent silent execution failures caused by environment decay, the platform implements **Attestation Hashing**.
+## 1. State Checkpointing
+The kernel must persist its internal state after every significant progress milestone to enable recovery.
 
-### Hash Inputs:
-- **Dependency Map**: The output of `pip freeze`.
-- **Interpreter Metadata**: The timestamp and size of the `python` binary.
-- **Critical Binaries**: Checksums of `ruff`, `pyright`, and other governance tools.
+### Checkpoint Trigger:
+A `checkpoint.json` is updated in the session directory whenever:
+- A `Lifecycle Transition` occurs.
+- An `ExecutionNode` moves to the `COMPLETED` state.
 
-## 2. Pre-Execution Attestation
-Before any `execute_command` call, the `VenvProvider` performs an **Integrity Check**:
-1. **Recalculate**: Generate a fresh hash of the current sandbox.
-2. **Compare**: Match against the `.integrity` file created during bootstrap.
-3. **Validate**: If hashes mismatch, raise an `ENVIRONMENT_CORRUPTION` error.
+## 2. Session Resumption Logic
+On boot, the kernel performs a **Recovery Scan**:
+1. **Identify**: Find folders in `.runtime/sessions/` containing a `checkpoint.json` but no `report.json`.
+2. **Re-Attest**: Run `EnvironmentAttestation` on the resumed sandbox.
+3. **Restore**: Deserialize the `ExecutionGraph` and set the kernel state to the last checkpointed phase.
+4. **Continue**: Resume the autonomous loop from the first `IDLE` or `REPAIRABLE` node.
 
-## 3. Corruption Recovery Strategy
-When attestation fails:
-1. **Quarantine**: The corrupted sandbox is immediately moved to the quarantine zone.
-2. **Re-Bootstrap**: The kernel triggers a fresh `BOOTSTRAP` phase to rebuild the environment from the `TaskSpec`.
+## 3. Resilience Constraints
+- **One-Time Resume**: A session can only be resumed once. If it crashes again during the resumed run, it is moved to quarantine.
+- **Integrity Lock**: If attestation fails on resume, the session is abandoned.
 
-## 4. Attestation Telemetry
-Every successful attestation is broadcasted as a `CONFIDENCE_EVENT`, increasing the **Operational Trust** score of the current graph.
+## 4. Recovery Telemetry
+Resumed tasks are flagged with a `RECOVERY_TRUE` metadata tag, allowing the UI to highlight the "Resurrected" portion of the timeline.

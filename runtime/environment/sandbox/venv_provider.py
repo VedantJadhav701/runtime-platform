@@ -20,10 +20,14 @@ class VenvProvider(SandboxInterface):
     """
     def __init__(self, session_id: str, workspace_root: str, watchdog: Optional[ProcessWatchdog] = None):
         self.session_id = session_id
-        self.workspace_root = workspace_root
-        self.venv_dir = os.path.join(workspace_root, ".runtime", "environments", session_id)
+        self.workspace_root = os.path.abspath(workspace_root)
+        self.session_dir = os.path.join(self.workspace_root, ".runtime", "sessions", session_id)
+        self.venv_dir = os.path.join(self.workspace_root, ".runtime", "environments", session_id)
         self.watchdog = watchdog or ProcessWatchdog()
         self.integrity_file = os.path.join(self.venv_dir, ".integrity")
+        
+        # Ensure session dir exists
+        os.makedirs(self.session_dir, exist_ok=True)
         
         # OS-specific paths
         if sys.platform == "win32":
@@ -93,6 +97,7 @@ class VenvProvider(SandboxInterface):
     async def execute_command(self, command: str, operation_type: str = "command_execution_default") -> Dict[str, Any]:
         """
         EXECUTE: Run commands via the venv's python or pip under watchdog governance.
+        Commands are executed in the session_dir by default.
         """
         logger.info(f"Executing in venv [{operation_type}]: {command}")
         
@@ -102,12 +107,13 @@ class VenvProvider(SandboxInterface):
         env["PATH"] = bin_dir + os.pathsep + env.get("PATH", "")
         env["VIRTUAL_ENV"] = self.venv_dir
         
+        # Use session_dir as CWD so local files (like server.py) are visible
         process = await asyncio.create_subprocess_shell(
             command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=env,
-            cwd=self.workspace_root
+            cwd=self.session_dir
         )
         
         # Use Watchdog for governed execution (v5.1 blueprint)

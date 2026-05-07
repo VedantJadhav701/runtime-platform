@@ -1,0 +1,101 @@
+{
+  "report": {
+    "task_id": "graph_1778191841",
+    "success": false,
+    "execution_time": 20.383426904678345,
+    "output": "",
+    "errors": [
+      "Traceback (most recent call last):\r\n  File \"<string>\", line 1, in <module>\r\n    import server\r\nModuleNotFoundError: No module named 'server'\nProcess failed with exit code 1"
+    ],
+    "rollback_performed": false,
+    "explainability_token": "exp_graph_1778191841"
+  },
+  "graph": {
+    "id": "graph_1778191841",
+    "nodes": {
+      "node_1": {
+        "id": "node_1",
+        "action": "SCAFFOLD",
+        "params": {
+          "template_id": "fastapi_basic"
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_2": {
+        "id": "node_2",
+        "action": "BOOTSTRAP",
+        "params": {},
+        "depends_on": [],
+        "status": "running",
+        "output": null,
+        "error": null
+      },
+      "node_3": {
+        "id": "node_3",
+        "action": "BOOTSTRAP",
+        "params": {},
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_4": {
+        "id": "node_4",
+        "action": "PROVISION",
+        "params": {
+          "features": [
+            "fastapi"
+          ]
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": null,
+        "error": null
+      },
+      "node_5": {
+        "id": "node_5",
+        "action": "JUDGE",
+        "params": {
+          "attempt": 0
+        },
+        "depends_on": [],
+        "status": "failed",
+        "output": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\r\n  File \"<string>\", line 1, in <module>\r\n    import server\r\nModuleNotFoundError: No module named 'server'\nProcess failed with exit code 1",
+          "execution_time": 0.5111281871795654,
+          "timed_out": false
+        },
+        "error": "Validation failed"
+      },
+      "node_6": {
+        "id": "node_6",
+        "action": "REPAIR",
+        "params": {
+          "attempt": 0
+        },
+        "depends_on": [],
+        "status": "failed",
+        "output": null,
+        "error": "No repair strategy matched or all failed"
+      }
+    },
+    "active_node_id": "node_6",
+    "state": "FAILED"
+  },
+  "confidence": {
+    "score": 80,
+    "reasons": [
+      "pristine_execution",
+      "validation_failed: FailureType.DEPENDENCY_FAILURE",
+      "validation_passed: FailureType.SYNTAX_FAILURE",
+      "validation_passed: FailureType.LINT_FAILURE"
+    ],
+    "status": "high"
+  },
+  "timestamp": 1778191866.908604
+}
