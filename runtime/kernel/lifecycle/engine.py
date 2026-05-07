@@ -17,6 +17,7 @@ from runtime.environment.validation.engine import ValidationEngine
 from runtime.kernel.lifecycle.repair_registry import RepairRegistry
 from runtime.kernel.lifecycle.confidence import ConfidenceEngine
 from runtime.environment.failure_taxonomy.definitions import FailureType
+from runtime.kernel.cleanup.manager import CleanupManager
 
 logger = logging.getLogger("runtime.kernel.lifecycle")
 
@@ -36,6 +37,7 @@ class LifecycleEngine:
         self.validator = ValidationEngine()
         self.repair_registry = RepairRegistry()
         self.confidence_engine = ConfidenceEngine()
+        self.cleanup_manager = CleanupManager(self.workspace_root)
 
     async def run_task(self, task_spec: TaskSpec) -> ExecutionReport:
         start_time = time.time()
@@ -160,6 +162,10 @@ class LifecycleEngine:
         except Exception as e:
             logger.error(f"Kernel Panic on {graph_id}: {str(e)}")
             await self._transition(graph_id, "ROLLBACK")
+            
+            # Trigger Quarantine for Rollback Sessions (v5.2)
+            self.cleanup_manager.quarantine_session(graph_id, reason=f"kernel_panic: {str(e)}")
+            
             report = ExecutionReport(
                 task_id=graph_id,
                 success=False,
