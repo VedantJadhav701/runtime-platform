@@ -9,6 +9,7 @@ from typing import Optional, Dict, Any
 from runtime.shared.interfaces.base import SandboxInterface
 
 from runtime.kernel.watchdog.process_watchdog import ProcessWatchdog
+from runtime.environment.sandbox.attestation import AttestationEngine
 
 logger = logging.getLogger("runtime.environment.venv")
 
@@ -22,6 +23,7 @@ class VenvProvider(SandboxInterface):
         self.workspace_root = workspace_root
         self.venv_dir = os.path.join(workspace_root, ".runtime", "environments", session_id)
         self.watchdog = watchdog or ProcessWatchdog()
+        self.integrity_file = os.path.join(self.venv_dir, ".integrity")
         
         # OS-specific paths
         if sys.platform == "win32":
@@ -34,7 +36,7 @@ class VenvProvider(SandboxInterface):
     async def bootstrap(self, config: Optional[Dict[str, Any]] = None) -> bool:
         """
         CREATE: Initialize the venv.
-        PROVISION: Install base requirements.
+        PROVISION: Install base requirements and generate attestation.
         """
         try:
             logger.info(f"Creating venv in {self.venv_dir}")
@@ -49,10 +51,44 @@ class VenvProvider(SandboxInterface):
                 operation_type="dependency_install"
             )
             
+            # ATTESTATION: Generate .integrity file (v5.3)
+            await self._generate_attestation()
+            
             return True
         except Exception as e:
             logger.error(f"Failed to bootstrap venv: {e}")
             return False
+
+    async def _generate_attestation(self):
+        """
+        Captures the initial state of the environment.
+        """
+        result = await self.execute_command(f"{self.python_executable} -m pip freeze")
+        manifest_hash = AttestationEngine.calculate_manifest_hash(result.get("stdout", ""))
+        
+        with open(self.integrity_file, "w") as f:
+            f.write(manifest_hash)
+        logger.info(f"Attestation generated: {self.integrity_file}")
+
+    async def validate_integrity(self) -> bool:
+        """
+        Re-runs pip freeze and compares against the stored .integrity hash.
+        """
+        if not os.path.exists(self.integrity_file):
+            logger.warning(f"Integrity check failed: .integrity file missing for {self.session_id}")
+            return False
+
+        with open(self.integrity_file, "r") as f:
+            expected_hash = f.read().strip()
+
+        result = await self.execute_command(f"{self.python_executable} -m pip freeze")
+        current_hash = AttestationEngine.calculate_manifest_hash(result.get("stdout", ""))
+        
+        is_valid = AttestationEngine.verify(current_hash, expected_hash)
+        if not is_valid:
+            logger.error(f"Integrity violation detected in environment {self.session_id}")
+            
+        return is_valid
 
     async def execute_command(self, command: str, operation_type: str = "command_execution_default") -> Dict[str, Any]:
         """

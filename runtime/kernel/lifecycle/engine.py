@@ -69,10 +69,36 @@ class LifecycleEngine:
             # STEP 2: BOOTSTRAP
             await self._transition(graph_id, "BOOTSTRAPPING")
             node_bootstrap = await self._add_node(graph_id, "BOOTSTRAP")
-            sandbox = VenvProvider(graph_id, session_dir)
-            if not await sandbox.bootstrap():
-                await self._update_node(graph_id, node_bootstrap.id, NodeStatus.FAILED, error="Bootstrap failed")
-                raise RuntimeError("Failed to bootstrap virtual environment")
+            
+            async def perform_bootstrap():
+                sandbox = VenvProvider(graph_id, self.workspace_root)
+                if not await sandbox.bootstrap():
+                    raise RuntimeError("Failed to bootstrap virtual environment")
+                
+                # INTEGRITY CHECK (v5.3)
+                if not await sandbox.validate_integrity():
+                    logger.error(f"Integrity check failed for {graph_id}")
+                    return False, sandbox
+                return True, sandbox
+
+            boot_success, sandbox = await perform_bootstrap()
+            
+            if not boot_success:
+                logger.warning(f"Bootstrap integrity failure on {graph_id}. Retrying once...")
+                # Quarantine the corrupted session
+                self.cleanup_manager.quarantine_session(graph_id, reason="integrity_failure_retry")
+                
+                # Re-create session dir for retry
+                os.makedirs(session_dir, exist_ok=True)
+                # Re-scaffold
+                self.scaffolder.scaffold(task_spec.template_id, session_dir)
+                
+                # Retry bootstrap
+                boot_success, sandbox = await perform_bootstrap()
+                if not boot_success:
+                    await self._update_node(graph_id, node_bootstrap.id, NodeStatus.FAILED, error="Bootstrap integrity failed after retry")
+                    raise RuntimeError("Bootstrap integrity failed after retry")
+
             await self._update_node(graph_id, node_bootstrap.id, NodeStatus.COMPLETED)
 
             # STEP 3: PROVISION

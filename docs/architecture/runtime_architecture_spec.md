@@ -1,22 +1,23 @@
-# Runtime Architecture Specification v5.2 (Runtime Hygiene Edition)
+# Runtime Architecture Specification v5.3 (Environment Attestation Edition)
 
-## 1. The Quarantine Lifecycle (`.runtime/quarantine/`)
-To preserve operational trust, the kernel never performs `rm -rf` on an active or recently failed session. Instead, it "Quarantines" the session.
+## 1. Sandbox Integrity Hashing
+To prevent silent execution failures caused by environment decay, the platform implements **Attestation Hashing**.
 
-### Quarantine Process:
-1. **Identify**: Mark session as `STALE` or `FAILED`.
-2. **Move**: Relocate the session directory to `.runtime/quarantine/{session_id}/`.
-3. **Annotate**: Create a `quarantine_metadata.json` including:
-   - `reason`: (e.g., Timeout, Rollback, Manual Purge)
-   - `timestamp`: Time of quarantine.
-   - `final_state`: The last known state of the execution graph.
-4. **Audit Window**: Keep the session in quarantine for a configurable period (default: 7 days).
+### Hash Inputs:
+- **Dependency Map**: The output of `pip freeze`.
+- **Interpreter Metadata**: The timestamp and size of the `python` binary.
+- **Critical Binaries**: Checksums of `ruff`, `pyright`, and other governance tools.
 
-## 2. Orphan Cleanup (GC)
-The **CleanupManager** runs as a background task to identify and resolve:
-- **Orphan Processes**: Processes whose parent graph is no longer active.
-- **Dead Venvs**: Virtual environments that haven't been touched in > 24h.
-- **Abandoned Sessions**: Sessions that reached a final state but weren't finalized.
+## 2. Pre-Execution Attestation
+Before any `execute_command` call, the `VenvProvider` performs an **Integrity Check**:
+1. **Recalculate**: Generate a fresh hash of the current sandbox.
+2. **Compare**: Match against the `.integrity` file created during bootstrap.
+3. **Validate**: If hashes mismatch, raise an `ENVIRONMENT_CORRUPTION` error.
 
-## 3. Permanent Disposal
-After the audit window expires, the system performs a **Deterministic Purge** of the quarantine zone to reclaim disk space.
+## 3. Corruption Recovery Strategy
+When attestation fails:
+1. **Quarantine**: The corrupted sandbox is immediately moved to the quarantine zone.
+2. **Re-Bootstrap**: The kernel triggers a fresh `BOOTSTRAP` phase to rebuild the environment from the `TaskSpec`.
+
+## 4. Attestation Telemetry
+Every successful attestation is broadcasted as a `CONFIDENCE_EVENT`, increasing the **Operational Trust** score of the current graph.
