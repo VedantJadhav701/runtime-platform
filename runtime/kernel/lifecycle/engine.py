@@ -175,14 +175,25 @@ class LifecycleEngine:
         Executes the entrypoint and validates the results.
         Returns (ValidationResult, execution_result).
         """
-        await self._transition(graph_id, "EXECUTING")
+        # --- PRE-FLIGHT (Static Analysis) ---
+        await self._transition(graph_id, "PRE_FLIGHT")
+        artifact_paths = [os.path.join(session_dir, "server.py")]
         
+        # Perform static analysis first (using a mock execution result)
+        static_validation = self.validator.validate({"exit_code": 0, "stdout": "", "stderr": ""}, artifact_paths)
+        
+        if not static_validation.success:
+            logger.warning("Pre-Flight Static Analysis failed. Skipping execution.")
+            # Inject validation details into a mock result for repairers
+            val_errors = "\n".join([d.message for d in static_validation.details if not d.success])
+            return static_validation, {"exit_code": 1, "stdout": "", "stderr": val_errors}
+
+        # --- EXECUTING ---
+        await self._transition(graph_id, "EXECUTING")
         result = await sandbox.execute_command("python -c \"import server\"")
         
+        # --- VALIDATING (Runtime) ---
         await self._transition(graph_id, "VALIDATING")
-        
-        # Validate artifacts
-        artifact_paths = [os.path.join(session_dir, "server.py")]
         validation = self.validator.validate(result, artifact_paths)
         
         # Inject validation details into result stderr for repairers to see if not already there
