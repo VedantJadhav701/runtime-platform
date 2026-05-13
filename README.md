@@ -1,11 +1,16 @@
-# Antigravity Runtime: Autonomous Local Execution Infrastructure (v6.0)
+# Antigravity Runtime: Autonomous Local Execution Infrastructure (v0.1.0)
 
+[![Website](https://img.shields.io/badge/Website-agrt.vercel.app-2563eb?style=flat&logo=vercel)](https://agrt.vercel.app/)
+[![PyPI version](https://img.shields.io/badge/PyPI-agrt--0.1.0-amber?style=flat&logo=pypi)](https://pypi.org/project/agrt/)
+[![GitHub Stars](https://img.shields.io/github/stars/VedantJadhav701/antigravity-runtime?style=social)](https://github.com/VedantJadhav701/antigravity-runtime)
 [![Operational Trust](https://img.shields.io/badge/Trust-Infrastructure--Grade-emerald)](docs/benchmarks.md)
 [![Status](https://img.shields.io/badge/Status-Production--Hardened-success)]()
-[![Governance](https://img.shields.io/badge/Governance-Watchdog--Enabled-amber)]()
-[![Replay](https://img.shields.io/badge/Debug-Time--Travel--Replay-blue)]()
 
-Antigravity Runtime is a production-grade, local-first **Autonomous Execution Platform**. It is engineered for teams that require **absolute operational trust**, **deterministic orchestration**, and **governed self-healing**.
+> **🚀 Explore the live operational narrative & Time-Travel Replay showcase:** [**https://agrt.vercel.app/**](https://agrt.vercel.app/)
+> 
+> ⭐ **Love open-source autonomous systems?** Please support us by [**starring the repository on GitHub**](https://github.com/VedantJadhav701/antigravity-runtime) and joining our active contributor base!
+
+Antigravity Runtime is an open-source, production-grade, local-first **Autonomous Execution Platform**. It is engineered for teams that require **absolute operational trust**, **deterministic orchestration**, and **governed self-healing**.
 
 Unlike generic AI assistants, Antigravity Runtime is an **Execution Operating System**. It doesn't just generate code—it governs its entire lifecycle, validates its integrity with cryptographic attestation, repairs its failures autonomously, and audits every micro-step via the **Replay Engine**.
 
