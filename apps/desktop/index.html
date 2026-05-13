@@ -1,13 +1,81 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Antigravity Runtime</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity | Autonomous Local Execution Platform</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div id="app">
+        <!-- Dashboard Header -->
+        <header class="main-header">
+            <div class="logo">
+                <span class="logo-icon">▲</span>
+                <h1>ANTIGRAVITY <span class="version-tag">v5.5 ALPHA</span></h1>
+            </div>
+            <nav class="status-nav">
+                <div class="status-item">
+                    <span class="status-dot green"></span>
+                    KERNEL: ONLINE
+                </div>
+                <div class="status-item">
+                    <span class="status-dot green"></span>
+                    WATCHDOG: ACTIVE
+                </div>
+            </nav>
+        </header>
+
+        <main class="layout-grid">
+            <!-- Left Panel: Task Orchestrator -->
+            <section class="panel orchestrator">
+                <div class="panel-header">
+                    <h2>INTENT ORCHESTRATOR</h2>
+                </div>
+                <div class="input-container">
+                    <textarea id="taskInput" placeholder="Enter natural language intent (e.g., Build a FastAPI service with JWT auth)..."></textarea>
+                    <button id="launchBtn" class="btn-primary">LAUNCH AUTONOMOUS CYCLE</button>
+                </div>
+                
+                <div class="execution-graph-container">
+                    <h3>EXECUTION GRAPH</h3>
+                    <div id="executionTimeline" class="timeline">
+                        <!-- Dynamic Nodes will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Telemetry & Replay -->
+            <section class="panel telemetry">
+                <div class="panel-header">
+                    <h2>EXECUTION HUD</h2>
+                    <div class="replay-controls">
+                        <button class="btn-icon">⏪</button>
+                        <button class="btn-icon">⏸</button>
+                        <button class="btn-icon">⏩</button>
+                    </div>
+                </div>
+                
+                <div class="telemetry-display">
+                    <div id="consoleOutput" class="console">
+                        <div class="line">Ready for instruction.</div>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <label>CONFIDENCE SCORE</label>
+                        <div id="confidenceVal" class="value">--%</div>
+                    </div>
+                    <div class="metric-card">
+                        <label>INTEGRITY ATTESATION</label>
+                        <div id="attestationVal" class="value status-ok">VERIFIED</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="main.js" type="module"></script>
+</body>
 </html>

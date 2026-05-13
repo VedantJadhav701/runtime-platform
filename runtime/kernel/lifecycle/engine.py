@@ -81,6 +81,7 @@ class LifecycleEngine:
                 await self._update_node(graph_id, node_scaffold.id, NodeStatus.COMPLETED, output={"message": "Project structure created successfully"})
 
             # STEP 2: BOOTSTRAP
+            attestation_passed = False
             if not resume_id or graph.state in ["SCAFFOLDING", "BOOTSTRAPPING"]:
                 await self._transition(graph_id, "BOOTSTRAPPING")
                 node_bootstrap = await self._add_node(graph_id, "BOOTSTRAP")
@@ -91,10 +92,8 @@ class LifecycleEngine:
                         raise RuntimeError("Failed to bootstrap virtual environment")
                     
                     # INTEGRITY CHECK (v5.3)
-                    if not await sb.validate_integrity():
-                        logger.error(f"Integrity check failed for {graph_id}")
-                        return False, sb
-                    return True, sb
+                    is_valid = await sb.validate_integrity()
+                    return is_valid, sb
 
                 boot_success, sandbox = await perform_bootstrap()
                 
@@ -108,13 +107,15 @@ class LifecycleEngine:
                         await self._update_node(graph_id, node_bootstrap.id, NodeStatus.FAILED, error="Bootstrap integrity failed after retry")
                         raise RuntimeError("Bootstrap integrity failed after retry")
 
+                attestation_passed = boot_success
                 with open(sandbox.integrity_file, "r") as f:
                     hash_val = f.read().strip()
                 await self._update_node(graph_id, node_bootstrap.id, NodeStatus.COMPLETED, output={"attestation_hash": hash_val})
             else:
                 # Re-initialize sandbox for resume
                 sandbox = VenvProvider(graph_id, self.workspace_root)
-                if not await sandbox.validate_integrity():
+                attestation_passed = await sandbox.validate_integrity()
+                if not attestation_passed:
                     logger.error(f"Resume integrity check failed for {graph_id}")
                     raise RuntimeError("Resume integrity failure")
 
@@ -138,6 +139,20 @@ class LifecycleEngine:
                 validation_res, last_execution_result = await self._run_and_judge(graph_id, sandbox, session_dir, task_spec)
                 validation_history.append(validation_res)
                 
+                # Update confidence evolution
+                current_conf = self.confidence_engine.calculate(
+                    [d.model_dump() for h in validation_history for d in h.details],
+                    repair_count,
+                    attestation_passed
+                )
+                await self.telemetry.broadcast_event(
+                    source="kernel",
+                    phase=graph.state,
+                    event_type="confidence_update",
+                    message=f"Confidence updated: {current_conf.score}%",
+                    data=current_conf.model_dump()
+                )
+
                 if validation_res.success:
                     success = True
                     await self._update_node(graph_id, node_judge.id, NodeStatus.COMPLETED, output=last_execution_result)
@@ -182,8 +197,9 @@ class LifecycleEngine:
 
             # Confidence
             confidence = self.confidence_engine.calculate(
-                [d.model_dump() for d in validation_history[-1].details] if validation_history else [],
-                repair_count
+                [d.model_dump() for h in validation_history for d in h.details] if validation_history else [],
+                repair_count,
+                attestation_passed
             )
 
             # STEP 6: FINALIZE
