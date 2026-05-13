@@ -43,9 +43,9 @@ export function ConfidenceIndicator({
 
   const colors = getColor(value);
   const sizeConfig = {
-    sm: { height: "h-1", width: "w-32", text: "text-[9px]", valueText: "text-sm" },
-    md: { height: "h-1.5", width: "w-48", text: "text-[10px]", valueText: "text-lg" },
-    lg: { height: "h-2", width: "w-64", text: "text-[11px]", valueText: "text-2xl" },
+    sm: { height: "h-1", width: "w-full max-w-[140px]", text: "text-[9px]", valueText: "text-sm" },
+    md: { height: "h-1.5", width: "w-full max-w-[200px]", text: "text-[10px]", valueText: "text-lg" },
+    lg: { height: "h-2", width: "w-full max-w-[260px]", text: "text-[11px]", valueText: "text-2xl" },
   };
 
   const config = sizeConfig[size];

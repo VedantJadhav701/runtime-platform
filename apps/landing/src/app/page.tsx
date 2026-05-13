@@ -44,29 +44,29 @@ export default function Home() {
 
       {/* ─── NAV ─── */}
       <nav className="fixed top-0 w-full z-50 border-b border-runtime-border/40 bg-runtime-bg/70 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-runtime-blue/10 border border-runtime-blue/20 flex items-center justify-center">
               <Cpu className="w-3.5 h-3.5 text-runtime-blue" />
             </div>
-            <span className="font-black tracking-tighter text-sm">
-              ANTIGRAVITY <span className="text-runtime-muted font-medium text-xs">RUNTIME</span>
+            <span className="font-black tracking-tighter text-xs sm:text-sm">
+              ANTIGRAVITY <span className="text-runtime-muted font-medium text-[10px] sm:text-xs hidden sm:inline">RUNTIME</span>
             </span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-[9px] font-bold uppercase tracking-[0.2em] text-runtime-muted">
+          <div className="hidden lg:flex items-center gap-8 text-[9px] font-bold uppercase tracking-[0.2em] text-runtime-muted">
             <a href="#lifecycle" className="hover:text-white transition-colors duration-300">Lifecycle</a>
             <a href="#recovery" className="hover:text-white transition-colors duration-300">Recovery</a>
             <a href="#replay" className="hover:text-white transition-colors duration-300">Replay</a>
             <a href="#benchmarks" className="hover:text-white transition-colors duration-300">Benchmarks</a>
           </div>
-          <button className="flex items-center gap-2 bg-white text-black text-[9px] font-black uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-runtime-blue hover:text-white transition-all duration-300">
+          <button className="flex items-center gap-1.5 sm:gap-2 bg-white text-black text-[8px] sm:text-[9px] font-black uppercase tracking-[0.15em] px-3 sm:px-4 py-2 rounded-lg hover:bg-runtime-blue hover:text-white transition-all duration-300">
             <Terminal className="w-3 h-3" /> agrt run
           </button>
         </div>
       </nav>
 
       {/* ─── SECTION 1: HERO ─── */}
-      <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-12 px-6 overflow-hidden">
+      <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-12 px-4 sm:px-6 overflow-hidden">
         {/* Ambient background */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-runtime-blue/[0.03] rounded-full blur-[150px]" />
@@ -88,7 +88,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-[-0.04em] leading-[0.92] mb-8"
+            className="text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-[-0.04em] leading-[0.92] mb-6 sm:mb-8"
           >
             Autonomous Local{" "}
             <br className="hidden md:block" />
@@ -101,7 +101,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base md:text-lg text-runtime-muted max-w-2xl mx-auto mb-10 leading-relaxed font-medium"
+            className="text-sm sm:text-base md:text-lg text-runtime-muted max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-medium px-2 sm:px-0"
           >
             Deterministic orchestration.
             <span className="text-runtime-muted-light"> Replayable execution. </span>
@@ -114,12 +114,12 @@ export default function Home() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <button className="group flex items-center gap-2.5 px-7 py-3.5 bg-white text-black font-black uppercase tracking-[0.15em] text-[10px] rounded-xl hover:bg-runtime-blue hover:text-white transition-all duration-300 shadow-[0_8px_32px_rgba(255,255,255,0.08)]">
+            <button className="group w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-3.5 bg-white text-black font-black uppercase tracking-[0.15em] text-[10px] rounded-xl hover:bg-runtime-blue hover:text-white transition-all duration-300 shadow-[0_8px_32px_rgba(255,255,255,0.08)]">
               <Terminal className="w-3.5 h-3.5" />
               agrt run
               <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </button>
-            <button className="flex items-center gap-2.5 px-7 py-3.5 bg-runtime-card border border-runtime-border font-bold uppercase tracking-[0.15em] text-[10px] rounded-xl hover:border-runtime-blue/30 hover:bg-runtime-card-hover transition-all duration-300 text-runtime-muted-light">
+            <button className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-3.5 bg-runtime-card border border-runtime-border font-bold uppercase tracking-[0.15em] text-[10px] rounded-xl hover:border-runtime-blue/30 hover:bg-runtime-card-hover transition-all duration-300 text-runtime-muted-light">
               <Play className="w-3.5 h-3.5" /> View Replay Engine
             </button>
           </motion.div>
@@ -130,7 +130,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="max-w-5xl w-full mt-16 z-10"
+          className="max-w-5xl w-full mt-10 sm:mt-16 z-10"
         >
           <ExecutionGraph />
         </motion.div>
@@ -140,22 +140,22 @@ export default function Home() {
       <div className="section-divider" />
 
       {/* ─── SECTION 2: EXECUTION LIFECYCLE ─── */}
-      <section id="lifecycle" className="py-28 md:py-36">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="lifecycle" className="py-16 sm:py-28 md:py-36">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
             {/* Left: Text */}
             <div>
               <SectionBadge>Execution Lifecycle</SectionBadge>
-              <h2 className="text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
                 Seven-stage{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-runtime-blue to-runtime-green">
                   autonomous loop.
                 </span>
               </h2>
-              <p className="text-runtime-muted text-base leading-relaxed mb-12 max-w-lg font-medium">
+              <p className="text-runtime-muted text-sm sm:text-base leading-relaxed mb-8 sm:mb-12 max-w-lg font-medium">
                 Every execution traverses a governed DAG — from intent extraction to verified delivery. Each stage emits telemetry, validates state, and preserves replay evidence.
               </p>
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-6">
                 {lifecycleStages.map((stage, i) => (
                   <LifecycleStep key={stage.num} {...stage} index={i} />
                 ))}
@@ -167,7 +167,7 @@ export default function Home() {
               <div className="relative rounded-2xl border border-runtime-border bg-runtime-card/30 overflow-hidden">
                 <div className="absolute inset-0 bg-dot-grid opacity-30" />
                 {/* Terminal mockup */}
-                <div className="relative p-6">
+                <div className="relative p-3 sm:p-6">
                   <div className="flex items-center gap-2 mb-4 pb-3 border-b border-runtime-border/50">
                     <div className="flex gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-runtime-red/50" />
@@ -181,7 +181,7 @@ export default function Home() {
                       <TelemetryPulse bars={4} color="blue" className="scale-75 opacity-60" />
                     </div>
                   </div>
-                  <div className="space-y-1.5 font-mono text-[10px] leading-relaxed">
+                  <div className="space-y-1.5 font-mono text-[8px] sm:text-[10px] leading-relaxed overflow-x-auto">
                     <TermLine color="green" delay={0.3}>[BOOT] Runtime initialized — PID 42891</TermLine>
                     <TermLine color="blue" delay={0.5}>[INTENT] TaskSpec compiled from user prompt</TermLine>
                     <TermLine color="blue" delay={0.7}>[SCAFFOLD] DAG constructed — 7 nodes, 11 edges</TermLine>
@@ -193,7 +193,7 @@ export default function Home() {
                     <TermLine color="blue" delay={1.9}>[REPLAY] Trace persisted — 847 events captured</TermLine>
                     <TermLine color="green" delay={2.1}>[DELIVERY] git commit → "feat: auth service"</TermLine>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-runtime-border/30 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-runtime-border/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <ConfidenceIndicator value={97} size="sm" label="Confidence" />
                     <ValidationState />
                   </div>
@@ -207,11 +207,11 @@ export default function Home() {
       <div className="section-divider" />
 
       {/* ─── SECTION 3: FAILURE & RECOVERY ─── */}
-      <section id="recovery" className="py-28 md:py-36">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="recovery" className="py-16 sm:py-28 md:py-36">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <SectionBadge color="amber">Autonomous Recovery</SectionBadge>
-            <h2 className="text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
               Failure is{" "}
               <span className="text-runtime-red italic">deterministic.</span>
               <br />
@@ -223,14 +223,14 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8 items-start">
             {/* Repair HUD */}
             <div className="lg:col-span-3">
               <RepairHUD />
             </div>
 
             {/* Repair Metrics */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4">
               <RepairMetric label="Failure Detection" value="<200ms" color="red" desc="Time to classify and route failure" />
               <RepairMetric label="Repair Routing" value="Taxonomy-Led" color="amber" desc="Formal classification drives repair strategy" />
               <RepairMetric label="Recovery Success" value="100%" color="green" desc="All governed failures recovered autonomously" />
@@ -243,12 +243,12 @@ export default function Home() {
       <div className="section-divider" />
 
       {/* ─── SECTION 4: REPLAY ENGINE ─── */}
-      <section id="replay" className="py-28 md:py-36">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="replay" className="py-16 sm:py-28 md:py-36">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div>
               <SectionBadge color="blue">Replay Engine</SectionBadge>
-              <h2 className="text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
                 Every decision.{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-runtime-blue to-runtime-green">
                   Inspectable.
@@ -257,7 +257,7 @@ export default function Home() {
               <p className="text-runtime-muted text-base leading-relaxed mb-8 max-w-lg font-medium">
                 Forensic-grade execution replay. Scrub through every step, inspect stdout/stderr, trace confidence evolution, and audit every repair decision.
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <ReplayFeature icon={<History className="w-4 h-4" />} label="Time-Travel Scrubbing" />
                 <ReplayFeature icon={<Terminal className="w-4 h-4" />} label="stdout/stderr Capture" />
                 <ReplayFeature icon={<BarChart3 className="w-4 h-4" />} label="Confidence History" />
@@ -265,7 +265,7 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <div className="rounded-2xl border border-runtime-border bg-runtime-card/30 p-6 overflow-hidden">
+              <div className="rounded-2xl border border-runtime-border bg-runtime-card/30 p-4 sm:p-6 overflow-hidden">
                 <div className="flex items-center gap-2 mb-4 pb-3 border-b border-runtime-border/50">
                   <Play className="w-3 h-3 text-runtime-blue" />
                   <span className="text-[9px] font-mono font-bold tracking-widest text-runtime-muted uppercase">
@@ -282,11 +282,11 @@ export default function Home() {
       <div className="section-divider" />
 
       {/* ─── SECTION 5: BENCHMARKS ─── */}
-      <section id="benchmarks" className="py-28 md:py-36">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="benchmarks" className="py-16 sm:py-28 md:py-36">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <SectionBadge color="green">Operational Evidence</SectionBadge>
-            <h2 className="text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
               Infrastructure metrics.{" "}
               <span className="text-runtime-muted">Not marketing.</span>
             </h2>
@@ -308,11 +308,11 @@ export default function Home() {
       <div className="section-divider" />
 
       {/* ─── SECTION 6: DELIVERY ─── */}
-      <section className="py-28 md:py-36">
-        <div className="max-w-4xl mx-auto px-6 text-center">
+      <section className="py-16 sm:py-28 md:py-36">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <SectionBadge color="green">Delivery Complete</SectionBadge>
 
-          <h2 className="text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-6">
             Execution verified.
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-runtime-blue to-runtime-green">
@@ -322,7 +322,7 @@ export default function Home() {
             Delivery complete.
           </h2>
 
-          <div className="max-w-2xl mx-auto my-12">
+          <div className="max-w-2xl mx-auto my-8 sm:my-12 overflow-x-auto">
             <DeliverySequence />
           </div>
 
@@ -338,7 +338,7 @@ export default function Home() {
 
       {/* ─── FOOTER ─── */}
       <footer className="border-t border-runtime-border/50">
-        <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex items-center gap-2.5">
               <div className="w-6 h-6 rounded-md bg-runtime-blue/10 border border-runtime-blue/20 flex items-center justify-center">
@@ -346,7 +346,7 @@ export default function Home() {
               </div>
               <span className="font-black tracking-tighter text-sm">ANTIGRAVITY</span>
             </div>
-            <div className="flex items-center gap-8 text-[8px] font-bold uppercase tracking-[0.3em] text-runtime-muted">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-[7px] sm:text-[8px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-runtime-muted">
               <span>© 2026 Antigravity</span>
               <span>Operational Trust</span>
               <span>Telemetry Fidelity</span>

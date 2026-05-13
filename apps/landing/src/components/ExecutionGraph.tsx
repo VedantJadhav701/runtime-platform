@@ -196,13 +196,11 @@ export function ExecutionGraph({ className, compact = false }: ExecutionGraphPro
 
               {/* Telemetry packet */}
               {activeNodes.has(edge.from) && activeNodes.has(edge.to) && !isRepairLoop && (
-                <motion.circle
-                  r="2"
-                  fill={edge.to === "repair" ? "#f59e0b" : "#3b82f6"}
-                  initial={{ opacity: 0 }}
+                <motion.g
+                  initial={{ x: from.cx, y: from.cy, opacity: 0 }}
                   animate={{
-                    cx: [from.cx, to.cx],
-                    cy: [from.cy, to.cy],
+                    x: [from.cx, to.cx],
+                    y: [from.cy, to.cy],
                     opacity: [0, 1, 1, 0],
                   }}
                   transition={{
@@ -211,7 +209,14 @@ export function ExecutionGraph({ className, compact = false }: ExecutionGraphPro
                     delay: i * 0.3,
                     ease: "linear",
                   }}
-                />
+                >
+                  <circle
+                    r="2"
+                    cx="0"
+                    cy="0"
+                    fill={edge.to === "repair" ? "#f59e0b" : "#3b82f6"}
+                  />
+                </motion.g>
               )}
             </g>
           );

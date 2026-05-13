@@ -9,17 +9,17 @@ interface DeliverySequenceProps {
 }
 
 const steps = [
-  { id: 1, label: "Validation Complete", icon: "✓", color: "text-runtime-green", bg: "bg-runtime-green" },
-  { id: 2, label: "Tests Passed", icon: "✓", color: "text-runtime-green", bg: "bg-runtime-green" },
-  { id: 3, label: "Git Staged", icon: "◈", color: "text-runtime-blue", bg: "bg-runtime-blue" },
+  { id: 1, label: "Validated", icon: "✓", color: "text-runtime-green", bg: "bg-runtime-green" },
+  { id: 2, label: "Tests Pass", icon: "✓", color: "text-runtime-green", bg: "bg-runtime-green" },
+  { id: 3, label: "Staged", icon: "◈", color: "text-runtime-blue", bg: "bg-runtime-blue" },
   { id: 4, label: "Committed", icon: "◈", color: "text-runtime-blue", bg: "bg-runtime-blue" },
-  { id: 5, label: "Replay Preserved", icon: "◈", color: "text-runtime-blue", bg: "bg-runtime-blue" },
+  { id: 5, label: "Replayed", icon: "◈", color: "text-runtime-blue", bg: "bg-runtime-blue" },
   { id: 6, label: "Delivered", icon: "★", color: "text-white", bg: "bg-white" },
 ];
 
 export function DeliverySequence({ className }: DeliverySequenceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
+  const isInView = useInView(containerRef, { once: true, margin: "-50px" });
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
@@ -36,7 +36,8 @@ export function DeliverySequence({ className }: DeliverySequenceProps) {
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      <div className="flex items-center justify-between gap-2">
+      {/* Desktop: horizontal */}
+      <div className="hidden sm:flex items-center justify-between gap-1">
         {steps.map((step, i) => (
           <div key={step.id} className="flex items-center flex-1 last:flex-none">
             <motion.div
@@ -65,7 +66,7 @@ export function DeliverySequence({ className }: DeliverySequenceProps) {
               </div>
               <span
                 className={cn(
-                  "text-[8px] font-mono font-bold tracking-widest uppercase text-center transition-colors duration-500 max-w-[80px]",
+                  "text-[7px] sm:text-[8px] font-mono font-bold tracking-widest uppercase text-center transition-colors duration-500 max-w-[70px]",
                   activeStep >= step.id ? step.color : "text-runtime-muted/50"
                 )}
               >
@@ -74,7 +75,7 @@ export function DeliverySequence({ className }: DeliverySequenceProps) {
             </motion.div>
 
             {i < steps.length - 1 && (
-              <div className="flex-1 mx-2 h-px relative overflow-hidden">
+              <div className="flex-1 mx-1 sm:mx-2 h-px relative overflow-hidden">
                 <div className="absolute inset-0 bg-runtime-border/30" />
                 <motion.div
                   initial={{ width: "0%" }}
@@ -90,6 +91,56 @@ export function DeliverySequence({ className }: DeliverySequenceProps) {
               </div>
             )}
           </div>
+        ))}
+      </div>
+
+      {/* Mobile: vertical */}
+      <div className="sm:hidden space-y-2">
+        {steps.map((step, i) => (
+          <motion.div
+            key={step.id}
+            initial={{ opacity: 0, x: -12 }}
+            animate={
+              activeStep >= step.id
+                ? { opacity: 1, x: 0 }
+                : { opacity: 0.3, x: 0 }
+            }
+            transition={{ duration: 0.4, delay: i * 0.08 }}
+            className="flex items-center gap-3"
+          >
+            <div
+              className={cn(
+                "w-7 h-7 rounded-lg border flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-500",
+                activeStep >= step.id
+                  ? cn(step.color, "border-current/30 bg-current/10")
+                  : "text-runtime-muted border-runtime-border bg-runtime-card"
+              )}
+            >
+              {activeStep >= step.id ? step.icon : "○"}
+            </div>
+            <div className="flex-1 flex items-center gap-3">
+              <span
+                className={cn(
+                  "text-[10px] font-mono font-bold tracking-widest uppercase transition-colors duration-500",
+                  activeStep >= step.id ? step.color : "text-runtime-muted/50"
+                )}
+              >
+                {step.label}
+              </span>
+              {i < steps.length - 1 && (
+                <div className="flex-1 h-px bg-runtime-border/30 relative overflow-hidden">
+                  <motion.div
+                    initial={{ width: "0%" }}
+                    animate={
+                      activeStep > step.id ? { width: "100%" } : { width: "0%" }
+                    }
+                    transition={{ duration: 0.4 }}
+                    className={cn("absolute inset-y-0 left-0", step.bg, "opacity-60")}
+                  />
+                </div>
+              )}
+            </div>
+          </motion.div>
         ))}
       </div>
     </div>
