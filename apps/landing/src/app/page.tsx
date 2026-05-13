@@ -59,8 +59,8 @@ export default function Home() {
             <a href="#replay" className="hover:text-white transition-colors duration-300">Replay</a>
             <a href="#benchmarks" className="hover:text-white transition-colors duration-300">Benchmarks</a>
           </div>
-          <button className="flex items-center gap-1.5 sm:gap-2 bg-white text-black text-[8px] sm:text-[9px] font-black uppercase tracking-[0.15em] px-3 sm:px-4 py-2 rounded-lg hover:bg-runtime-blue hover:text-white transition-all duration-300">
-            <Terminal className="w-3 h-3" /> agrt run
+          <button className="flex items-center gap-1.5 sm:gap-2 bg-white text-black text-[10px] font-mono font-bold tracking-tight px-3 sm:px-4 py-2 rounded-lg hover:bg-runtime-blue hover:text-white transition-all duration-300">
+            <Terminal className="w-3 h-3" /> pip install agrt
           </button>
         </div>
       </nav>
@@ -78,10 +78,10 @@ export default function Home() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-runtime-blue/[0.08] border border-runtime-blue/15 text-runtime-blue text-[9px] font-bold uppercase tracking-[0.25em] mb-8"
+            className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-runtime-blue/[0.08] border border-runtime-blue/15 text-runtime-blue text-[9px] font-mono font-bold uppercase tracking-[0.2em] mb-8"
           >
             <Activity className="w-3 h-3 animate-pulse" />
-            Runtime v6.0 — Production Ready
+            agrt 0.1.0 — Production Ready
           </motion.div>
 
           <motion.h1
@@ -114,14 +114,17 @@ export default function Home() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <button className="group w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-3.5 bg-white text-black font-black uppercase tracking-[0.15em] text-[10px] rounded-xl hover:bg-runtime-blue hover:text-white transition-all duration-300 shadow-[0_8px_32px_rgba(255,255,255,0.08)]">
-              <Terminal className="w-3.5 h-3.5" />
-              agrt run
-              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <button className="group w-full sm:w-auto flex items-center justify-center gap-3 px-6 py-2.5 bg-white text-black rounded-xl hover:bg-runtime-blue hover:text-white transition-all duration-300 shadow-[0_8px_32px_rgba(255,255,255,0.08)]">
+              <Terminal className="w-4 h-4 shrink-0" />
+              <div className="flex flex-col items-start text-left leading-tight font-mono">
+                <span className="text-xs font-bold tracking-tight">pip install agrt</span>
+                <span className="text-[8px] font-sans font-extrabold uppercase tracking-widest text-black/60 group-hover:text-white/80 mt-0.5">agrt 0.1.0</span>
+              </div>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform shrink-0 ml-1" />
             </button>
-            <button className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-3.5 bg-runtime-card border border-runtime-border font-bold uppercase tracking-[0.15em] text-[10px] rounded-xl hover:border-runtime-blue/30 hover:bg-runtime-card-hover transition-all duration-300 text-runtime-muted-light">
+            <a href="#replay" className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-4 bg-runtime-card border border-runtime-border font-bold uppercase tracking-[0.15em] text-[10px] rounded-xl hover:border-runtime-blue/30 hover:bg-runtime-card-hover transition-all duration-300 text-runtime-muted-light">
               <Play className="w-3.5 h-3.5" /> View Replay Engine
-            </button>
+            </a>
           </motion.div>
         </div>
 
