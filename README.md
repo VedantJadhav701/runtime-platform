@@ -134,5 +134,14 @@ We prioritize empirical data over marketing hype. Our latest benchmarks show:
 
 ---
 
+## 🤝 Contributing & Governance
+
+Antigravity Runtime thrives on community engineering. We welcome contributions across our kernel execution modules, AST parsers, and UI components.
+
+- **[Contributing Guide](CONTRIBUTING.md)**: Review our local development prerequisites, styling criteria, and Conventional Commit pull request standards.
+- **[Code of Conduct](CODE_OF_CONDUCT.md)**: We maintain a highly professional, inclusive, and safe environment. All community participants are expected to uphold our global standards.
+
+---
+
 ## 📜 License
 Antigravity Runtime is licensed under the [MIT License](LICENSE). Built for the era of Autonomous Infrastructure. 🚀
