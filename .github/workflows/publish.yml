@@ -9,6 +9,7 @@ jobs:
   build-and-publish:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
+    environment: pypi
     
     # Required for OIDC Trusted Publishing
     permissions:
