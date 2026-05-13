@@ -1,0 +1,122 @@
+{
+  "report": {
+    "task_id": "graph_1778671489",
+    "success": true,
+    "execution_time": 87.6225233078003,
+    "output": "",
+    "errors": [],
+    "rollback_performed": false,
+    "explainability_token": "exp_graph_1778671489"
+  },
+  "graph": {
+    "id": "graph_1778671489",
+    "nodes": {
+      "node_1": {
+        "id": "node_1",
+        "action": "SCAFFOLD",
+        "params": {
+          "template_id": "fastapi_basic"
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": {
+          "message": "Project structure created successfully"
+        },
+        "error": null
+      },
+      "node_2": {
+        "id": "node_2",
+        "action": "BOOTSTRAP",
+        "params": {},
+        "depends_on": [],
+        "status": "completed",
+        "output": {
+          "attestation_hash": "45481d518719b3cd74d58864acaa772fe8140538e4879d95e9f73227aee1e205"
+        },
+        "error": null
+      },
+      "node_3": {
+        "id": "node_3",
+        "action": "PROVISION",
+        "params": {
+          "features": [
+            "uvicorn"
+          ]
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": {
+          "installed_features": [
+            "uvicorn"
+          ]
+        },
+        "error": null
+      },
+      "node_4": {
+        "id": "node_4",
+        "action": "JUDGE",
+        "params": {
+          "attempt": 0
+        },
+        "depends_on": [],
+        "status": "failed",
+        "output": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\r\n  File \"<string>\", line 1, in <module>\r\n    import server\r\n  File \"C:\\Users\\HP\\projects\\runtime-platform\\.agrt\\sessions\\graph_1778671489\\server.py\", line 1, in <module>\r\n    from fastapi import FastAPI\r\nModuleNotFoundError: No module named 'fastapi'\nProcess failed with exit code 1",
+          "execution_time": 0.6102471351623535,
+          "timed_out": false
+        },
+        "error": "Validation failed"
+      },
+      "node_5": {
+        "id": "node_5",
+        "action": "REPAIR",
+        "params": {
+          "attempt": 0
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": {
+          "type": "dependency_failure",
+          "repairer": "DependencyRepair"
+        },
+        "error": null
+      },
+      "node_6": {
+        "id": "node_6",
+        "action": "JUDGE",
+        "params": {
+          "attempt": 1
+        },
+        "depends_on": [],
+        "status": "completed",
+        "output": {
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "execution_time": 3.8207995891571045,
+          "timed_out": false
+        },
+        "error": null
+      }
+    },
+    "active_node_id": "node_6",
+    "state": "COMPLETED"
+  },
+  "confidence": {
+    "score": 70,
+    "reasons": [
+      "environment_attested: SHA-256 integrity verified",
+      "autonomous_recovery: 1 repairs required to reach stable state",
+      "validation_failed: FailureType.DEPENDENCY_FAILURE (Process failed with exit code 1)"
+    ],
+    "status": "moderate",
+    "metrics": {
+      "repair_penalty": 15.0,
+      "validation_penalty": 15.0,
+      "attestation_bonus": 5.0
+    }
+  },
+  "timestamp": 1778671577.2984734
+}

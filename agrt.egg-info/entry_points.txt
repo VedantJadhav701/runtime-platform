@@ -1,0 +1,2 @@
+[console_scripts]
+agrt = agrt.cli:main
