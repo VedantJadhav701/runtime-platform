@@ -54,7 +54,7 @@ export function BenchmarkCard({
   const isInView = useInView(cardRef, { once: true, margin: "-50px" });
   const motionValue = useMotionValue(0);
   const displayValue = useTransform(motionValue, (v) => {
-    if (unit === "%" || unit === "ms") return Math.round(v);
+    if (unit === "%" || unit === "ms") return String(Math.round(v));
     return v.toFixed(1);
   });
   const hasAnimated = useRef(false);
