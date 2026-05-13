@@ -119,15 +119,17 @@ class ValidationEngine:
         Runs ruff check on the file.
         """
         try:
-            # We use --select ALL to be strict, or just default
+            # Force UTF-8 encoding for subprocess output
             result = subprocess.run(
                 ["ruff", "check", file_path, "--quiet", "--no-cache"],
                 capture_output=True,
-                text=True
+                text=True,
+                encoding="utf-8",
+                errors="replace"
             )
             if result.returncode != 0:
                 # Return the first few lines of errors
-                errors = "\n".join(result.stdout.splitlines()[:3])
+                errors = "\n".join(result.stdout.splitlines()[:3]) if result.stdout else "Ruff linting violation detected."
                 return False, errors
             return True, None
         except FileNotFoundError:

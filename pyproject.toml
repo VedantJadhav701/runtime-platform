@@ -3,6 +3,10 @@ name = "agrt"
 version = "0.1.0"
 description = "Antigravity Runtime: Autonomous Local Execution Infrastructure"
 authors = ["Vedant Jadhav <vedant@example.com>"]
+packages = [
+    { include = "agrt" },
+    { include = "runtime" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
